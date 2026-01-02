@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Özsoy / ATAY CHECKER - API Listesi</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #050507;
+            --panel-bg: #0c0c10;
+            --accent: #ff2d55;
+            --accent-glow: rgba(255, 45, 85, 0.6);
+            --neon-green: #00ffa3;
+            --neon-blue: #00a8ff;
+            --neon-purple: #9c27b0;
+            --sidebar-w: 280px;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Rajdhani', sans-serif; 
+        }
+        
+        body { 
+            background: var(--bg-dark); 
+            color: #e0e0e0; 
+            overflow-x: hidden; 
+            min-height: 100vh;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--panel-bg);
+            position: fixed;
+            left: -280px;
+            top: 0;
+            border-right: 1px solid #1a1a20;
+            z-index: 1000;
+            transition: 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar.active { 
+            left: 0; 
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* PROFIL KISMI */
+        .profile-card {
+            padding: 20px 15px;
+            border-bottom: 1px solid #1a1a20;
+            background: linear-gradient(180deg, #111116 0%, transparent 100%);
+        }
+
+        .profile-flex { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 15px;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--accent);
+        }
+
+        .avatar-wrapper img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .profile-details h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* MENÜ KATEGORİ SİSTEMİ */
+        .menu-label { 
+            padding: 18px 15px 6px; 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            color: var(--accent); 
+            letter-spacing: 1.5px; 
+            font-weight: bold; 
+        }
+
+        .nav-category { 
+            cursor: pointer; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-link {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #8d8d99;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 45, 85, 0.05);
+            border-left-color: var(--accent);
+            color: #fff;
+        }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+            transition: max-height 0.4s ease-out;
+        }
+
+        .nav-category.open .submenu { 
+            max-height: 2000px; 
+        }
+        
+        .nav-category.open .chevron { 
+            transform: rotate(180deg); 
+        }
+
+        .sub-link {
+            padding: 10px 15px 10px 40px;
+            font-size: 13px;
+            color: #aaa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.3s;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .sub-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+            border-left-color: var(--neon-green);
+            padding-left: 43px;
+        }
+
+        /* Badge Stilleri */
+        .badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .free-badge {
+            background: rgba(0, 255, 163, 0.15);
+            color: var(--neon-green);
+            border: 1px solid rgba(0, 255, 163, 0.3);
+        }
+
+        .vip-badge {
+            background: rgba(255, 45, 85, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(255, 45, 85, 0.3);
+        }
+
+        /* Çıkış Butonu */
+        .logout-btn {
+            margin-top: auto;
+            padding: 15px;
+            border-top: 1px solid #1a1a20;
+        }
+
+        .logout-btn .nav-link {
+            color: #ff4d4d;
+        }
+
+        .logout-btn .nav-link:hover {
+            background: rgba(255, 77, 77, 0.1);
+            border-left-color: #ff4d4d;
+        }
+
+        /* SAĞ ÜST BUTONLAR - ALT ALTA SIRA */
+        .right-controls {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1001;
+            align-items: flex-end;
+        }
+
+        .btn-top {
+            background: var(--panel-bg);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100px;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-top:hover { 
+            background: #1a1a20; 
+            border-color: var(--accent); 
+            color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* MENÜ AÇMA BUTONU - SOL ÜST */
+        .menu-open-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: var(--panel-bg);
+            border: 1px solid var(--accent);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100px;
+            justify-content: center;
+            z-index: 1002;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .sidebar.active ~ .menu-open-btn {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .menu-open-btn:hover {
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        /* ANA İÇERİK */
+        .main-wrapper { 
+            min-height: 100vh;
+            padding: 100px 20px 40px 20px;
+            transition: 0.3s;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* NEON BAŞLIK */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #aaa;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* API KATEGORİLERİ */
+        .category-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .api-category {
+            background: var(--panel-bg);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #1a1a20;
+            transition: 0.3s;
+        }
+
+        .api-category:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(255, 45, 85, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #1a1a20;
+        }
+
+        .category-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: rgba(255, 45, 85, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 22px;
+        }
+
+        .category-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .api-endpoints {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .api-endpoint {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 3px solid var(--neon-blue);
+            transition: 0.3s;
+        }
+
+        .api-endpoint:hover {
+            background: rgba(0, 0, 0, 0.5);
+            border-left-color: var(--accent);
+        }
+
+        .endpoint-method {
+            display: inline-block;
+            padding: 3px 10px;
+            background: var(--neon-blue);
+            color: #000;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .endpoint-url {
+            color: #e0e0e0;
+            font-size: 13px;
+            word-break: break-all;
+            margin: 8px 0;
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+
+        .endpoint-desc {
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .endpoint-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .endpoint-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .copy-btn {
+            background: rgba(0, 168, 255, 0.2);
+            color: var(--neon-blue);
+            border: 1px solid rgba(0, 168, 255, 0.3);
+        }
+
+        .copy-btn:hover {
+            background: rgba(0, 168, 255, 0.4);
+        }
+
+        .test-btn {
+            background: rgba(0, 255, 163, 0.2);
+            color: var(--neon-green);
+            border: 1px solid rgba(0, 255, 163, 0.3);
+        }
+
+        .test-btn:hover {
+            background: rgba(0, 255, 163, 0.4);
+        }
+
+        /* API TEST MODALI */
+        .api-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .api-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--accent);
+            box-shadow: 0 0 30px rgba(255, 45, 85, 0.3);
+        }
+
+        .modal-header {
+            padding: 20px;
+            background: rgba(255, 45, 85, 0.1);
+            border-bottom: 1px solid #1a1a20;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            font-size: 18px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 45, 85, 0.3);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+
+        .test-input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .test-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--accent), #ff6b6b);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 20px;
+        }
+
+        .test-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 45, 85, 0.4);
+        }
+
+        .result-container {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .result-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+        }
+
+        .result-content {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #333;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        /* OVERLAY */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 999;
+        }
+
+        .overlay.active { 
+            display: block; 
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .menu-open-btn {
+                left: 10px;
+                top: 10px;
+                padding: 6px 10px;
+                font-size: 11px;
+                width: 90px;
+            }
+            
+            .right-controls { 
+                right: 10px; 
+                top: 10px; 
+                gap: 6px;
+            }
+            
+            .btn-top { 
+                padding: 6px 10px; 
+                font-size: 11px;
+                width: 90px;
+            }
+            
+            .main-wrapper { 
+                padding: 120px 10px 20px 10px; 
+            }
+            
+            .page-title {
+                font-size: 24px;
+            }
+            
+            .page-subtitle {
+                font-size: 14px;
+            }
+            
+            .category-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .api-category {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .right-controls {
+                flex-direction: column;
+            }
+            
+            .btn-top, .menu-open-btn { 
+                width: 80px;
+                font-size: 10px;
+            }
+            
+            .main-wrapper {
+                padding: 140px 10px 20px 10px;
+            }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--panel-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-glow);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÜ AÇMA BUTONU - SOL ÜST -->
+    <button class="menu-open-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i> MENÜ
+    </button>
+
+    <!-- SAĞ ÜST BUTONLAR - ALT ALTA -->
+    <div class="right-controls">
+        <a href="index.html" class="btn-top">
+            <i class="fas fa-home"></i> ANA SAYFA
+        </a>
+        <a href="abonelik.html" class="btn-top">
+            <i class="fas fa-shopping-cart"></i> MARKET
+        </a>
+        <a href="profile.html" class="btn-top">
+            <i class="fas fa-user"></i> PROFİL
+        </a>
+    </div>
+
+    <!-- OVERLAY -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <div class="profile-card">
+            <div class="profile-flex">
+                <div class="avatar-wrapper">
+                    <img src="https://i.ibb.co/Xx6gGtrM/file-000000001b9c71fd9807f2279567f8cd.png" alt="Profile">
+                </div>
+                <div class="profile-details">
+                    <h4>Admin <i class="fas fa-check-circle" style="color: #3498db;"></i></h4>
+                    <p style="color: var(--neon-green);">● Çevrimiçi - VIP Üye</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- API MENÜSÜ -->
+        <div class="menu-label">API SİSTEMİ</div>
+        <div class="nav-category" id="apiCat">
+            <div class="nav-link" onclick="toggleCat('apiCat')">
+                <span><i class="fas fa-code" style="color:var(--neon-blue)"></i> API Listesi</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="scrollToCategory('plaka')">
+                    Plaka API'leri <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="scrollToCategory('papara')">
+                    Papara API'leri <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="scrollToCategory('eczane')">
+                    Eczane API'leri <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="scrollToCategory('serino')">
+                    Seri No API'leri <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="scrollToCategory('vergi')">
+                    Vergi API'leri <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="scrollToCategory('phishing')">
+                    Phishing API'leri <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="scrollToCategory('panel')">
+                    Panel API'leri <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÇIKIŞ BUTONU -->
+        <div class="logout-btn">
+            <a href="#" class="nav-link">
+                <span><i class="fas fa-power-off"></i> Çıkış Yap</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ANA İÇERİK -->
+    <main class="main-wrapper" id="mainWrapper">
+        
+        <!-- SAYFA BAŞLIĞI -->
+        <div class="page-header">
+            <h1 class="page-title">API LİSTESİ</h1>
+            <p class="page-subtitle">Tüm API endpoint'lerini buradan görüntüleyebilir, kopyalayabilir ve test edebilirsiniz.</p>
+        </div>
+
+        <!-- API KATEGORİLERİ -->
+        <div class="category-container" id="apiCategories">
+            <!-- PLATE API'leri -->
+            <div class="api-category" id="plaka-category">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="category-title">PLAKA API'leri</div>
+                </div>
+                <div class="api-endpoints">
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Plaka sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://plakaf3.onrender.com/f3api/plaka?plaka=34KG4978</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('plaka1')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">TC'ye göre plaka sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://plakaf3.onrender.com/f3/api/plaka?tc=</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('plaka2')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Ad soyad ile plaka sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://plakaf3.onrender.com/f3/api/adsoyadplaka?ad=&soyad=</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('plaka3')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAPARA API'leri -->
+            <div class="api-category" id="papara-category">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="category-title">PAPARA API'leri</div>
+                </div>
+                <div class="api-endpoints">
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Papara numarası ile sorgu</span>
+                        </div>
+                        <div class="endpoint-url">https://paparadata.onrender.com/f3system/api/papara?paparano=1977050442</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('papara1')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Ad soyad ile papara sorgusu</span>
+                        </div>
+                        <div class="endpoint-url">https://paparadata.onrender.com/f3system/api/papara?ad=UFUK&soyad=DEMİR</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('papara2')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ECZANE API'leri -->
+            <div class="api-category" id="eczane-category">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                    <div class="category-title">ECZANE API'leri</div>
+                </div>
+                <div class="api-endpoints">
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Ad ile eczane sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://eczanedataf3.onrender.com/f3system/api/eczane?ad=</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('eczane1')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">İl ile eczane sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://eczanedataf3.onrender.com/f3system/api/eczane?il=</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('eczane2')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SERİ NO API'leri -->
+            <div class="api-category" id="serino-category">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <i class="fas fa-fingerprint"></i>
+                    </div>
+                    <div class="category-title">SERİ NO API'leri</div>
+                </div>
+                <div class="api-endpoints">
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">TC ile seri no sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://serinodataf3.onrender.com/serino?tc=31702753468</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('serino1')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Ad soyad ile seri no sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://serinodataf3.onrender.com/serino?ad=GENCAY&soyad=EROL</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('serino2')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VERGİ API'leri -->
+            <div class="api-category" id="vergi-category">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div class="category-title">VERGİ API'leri</div>
+                </div>
+                <div class="api-endpoints">
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">İsim ile vergi sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://vergidata-hv43.onrender.com/f3system/api/vergi?isim=RAMAZAN</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('vergi1')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Vergi numarası ile sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://vergidata-hv43.onrender.com/f3system/api/vergi?vergi_no=11338465102</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('vergi2')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PHISHING API'leri -->
+            <div class="api-category" id="phishing-category">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <i class="fas fa-fish"></i>
+                    </div>
+                    <div class="category-title">PHISHING API'leri</div>
+                </div>
+                <div class="api-endpoints">
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Özel phishing link oluşturma</span>
+                        </div>
+                        <div class="endpoint-url">https://phishing-n3gi.onrender.com/create_link?token=TOKEN&id=CHAT_ID&template=TEMPLATE</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('phishing1')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Instagram phishing linki</span>
+                        </div>
+                        <div class="endpoint-url">https://phishing-n3gi.onrender.com/instagram?token=TOKEN&id=CHAT_ID</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('phishing2')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL API'leri -->
+            <div class="api-category" id="panel-category">
+                <div class="category-header">
+                    <div class="category-icon">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="category-title">PANEL API'leri</div>
+                </div>
+                <div class="api-endpoints">
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Nüfus sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://panelapi.onrender.com/api/v1/nufus/sorgu?tc=</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('panel1')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Aşı kayıtları sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://panelapi.onrender.com/api/v1/saglik/asi-kayitlari?tc=</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('panel2')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                    <div class="api-endpoint">
+                        <div>
+                            <span class="endpoint-method">GET</span>
+                            <span class="endpoint-desc">Ehliyet sorgulama</span>
+                        </div>
+                        <div class="endpoint-url">https://panelapi.onrender.com/api/v1/ehliyet/sorgu?tc=</div>
+                        <div class="endpoint-actions">
+                            <button class="endpoint-btn copy-btn" onclick="copyApiUrl(this)">
+                                <i class="fas fa-copy"></i> Kopyala
+                            </button>
+                            <button class="endpoint-btn test-btn" onclick="testApi('panel3')">
+                                <i class="fas fa-bolt"></i> Test Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- API TEST MODALI -->
+    <div class="api-modal" id="apiModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">API Test Paneli</div>
+                <button class="close-modal" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="testForm"></div>
+                <div id="testResult" class="result-container">
+                    <div class="result-header">
+                        <div class="result-title">API Yanıtı</div>
+                        <button class="endpoint-btn copy-btn" onclick="copyResult()">
+                            <i class="fas fa-copy"></i> Kopyala
+                        </button>
+                    </div>
+                    <div class="result-content" id="resultContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API TEST FORMLARI
+        const apiForms = {
+            'plaka1': {
+                title: 'Plaka Sorgulama Testi',
+                url: 'https://plakaf3.onrender.com/f3api/plaka?plaka=',
+                params: [
+                    {
+                        name: 'plaka',
+                        label: 'Plaka Numarası',
+                        placeholder: '34KG4978',
+                        required: true
+                    }
+                ]
+            },
+            'plaka2': {
+                title: 'TC ile Plaka Sorgulama',
+                url: 'https://plakaf3.onrender.com/f3/api/plaka?tc=',
+                params: [
+                    {
+                        name: 'tc',
+                        label: 'TC Kimlik No',
+                        placeholder: '12345678901',
+                        required: true
+                    }
+                ]
+            },
+            'papara1': {
+                title: 'Papara Numarası Sorgulama',
+                url: 'https://paparadata.onrender.com/f3system/api/papara?paparano=',
+                params: [
+                    {
+                        name: 'paparano',
+                        label: 'Papara Numarası',
+                        placeholder: '1977050442',
+                        required: true
+                    }
+                ]
+            },
+            'eczane1': {
+                title: 'Eczane Adı ile Sorgulama',
+                url: 'https://eczanedataf3.onrender.com/f3system/api/eczane?ad=',
+                params: [
+                    {
+                        name: 'ad',
+                        label: 'Eczane Adı',
+                        placeholder: 'EczaDepo',
+                        required: true
+                    }
+                ]
+            },
+            'serino1': {
+                title: 'TC ile Seri No Sorgulama',
+                url: 'https://serinodataf3.onrender.com/serino?tc=',
+                params: [
+                    {
+                        name: 'tc',
+                        label: 'TC Kimlik No',
+                        placeholder: '31702753468',
+                        required: true
+                    }
+                ]
+            },
+            'vergi1': {
+                title: 'İsim ile Vergi Sorgulama',
+                url: 'https://vergidata-hv43.onrender.com/f3system/api/vergi?isim=',
+                params: [
+                    {
+                        name: 'isim',
+                        label: 'İsim',
+                        placeholder: 'RAMAZAN',
+                        required: true
+                    }
+                ]
+            }
+        };
+
+        // SAYFA YÜKLENDİĞİNDE
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('API sayfası yüklendi!');
+        });
+
+        // API URL'SİNİ KOPYALA
+        function copyApiUrl(button) {
+            const endpointUrl = button.closest('.api-endpoint').querySelector('.endpoint-url').textContent;
+            
+            navigator.clipboard.writeText(endpointUrl).then(() => {
+                // Orijinal buton metnini sakla
+                const originalText = button.innerHTML;
+                const originalBg = button.style.background;
+                
+                // Başarılı mesajı göster
+                button.innerHTML = '<i class="fas fa-check"></i> Kopyalandı!';
+                button.style.background = 'rgba(0, 255, 163, 0.4)';
+                
+                // 2 saniye sonra orijinal haline dön
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = originalBg;
+                }, 2000);
+            }).catch(err => {
+                console.error('Kopyalama hatası:', err);
+                alert('Kopyalama başarısız! Manuel olarak kopyalayın.');
+            });
+        }
+
+        // API TEST ET
+        function testApi(apiId) {
+            if (!apiForms[apiId]) {
+                alert('Bu API için test formu bulunamadı!');
+                return;
+            }
+            
+            const form = apiForms[apiId];
+            const testForm = document.getElementById('testForm');
+            const modal = document.getElementById('apiModal');
+            const resultContainer = document.getElementById('testResult');
+            
+            // Test formunu oluştur
+            testForm.innerHTML = `
+                <h3 style="color: #fff; margin-bottom: 20px; font-family: 'Orbitron', sans-serif;">${form.title}</h3>
+                ${form.params.map((param, index) => `
+                    <div class="test-input-group">
+                        <label class="input-label">${param.label}${param.required ? ' *' : ''}</label>
+                        <input type="text" class="input-field" id="param${index}" placeholder="${param.placeholder || ''}" ${param.required ? 'required' : ''}>
+                    </div>
+                `).join('')}
+                <button class="test-button" onclick="runApiTest('${apiId}')">
+                    <i class="fas fa-bolt"></i> API'Yİ TEST ET
+                </button>
+            `;
+            
+            // Sonuçları gizle
+            resultContainer.style.display = 'none';
+            
+            // Modalı aç
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // API TESTİ ÇALIŞTIR
+        async function runApiTest(apiId) {
+            const form = apiForms[apiId];
+            const resultContainer = document.getElementById('testResult');
+            const resultContent = document.getElementById('resultContent');
+            
+            // Parametreleri topla
+            let params = {};
+            form.params.forEach((param, index) => {
+                const value = document.getElementById(`param${index}`).value.trim();
+                if (value) {
+                    params[param.name] = value;
+                }
+            });
+            
+            // URL oluştur
+            let apiUrl = form.url;
+            
+            // Parametreleri URL'ye ekle
+            if (Object.keys(params).length > 0) {
+                const urlParams = new URLSearchParams(params);
+                apiUrl = form.url.split('?')[0] + '?' + urlParams.toString();
+            }
+            
+            // Test URL'sini göster
+            resultContent.innerHTML = `🔗 Test Edilen URL:\n${apiUrl}\n\n⏳ Yanıt bekleniyor...`;
+            resultContainer.style.display = 'block';
+            
+            try {
+                // API'yi çağır
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                // Yanıtı formatla
+                resultContent.innerHTML = `✅ API Yanıtı (${response.status} ${response.statusText}):\n\n${JSON.stringify(data, null, 2)}`;
+                
+            } catch (error) {
+                console.error('API hatası:', error);
+                resultContent.innerHTML = `❌ API Hatası:\n\n${error.message}\n\nℹ️ Tarayıcı konsolunu kontrol edin veya API endpoint'ini doğrulayın.`;
+            }
+            
+            // Sonuca scroll et
+            resultContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // SONUCU KOPYALA
+        function copyResult() {
+            const resultContent = document.getElementById('resultContent').textContent;
+            
+            navigator.clipboard.writeText(resultContent).then(() => {
+                alert('Sonuç panoya kopyalandı!');
+            }).catch(err => {
+                console.error('Kopyalama hatası:', err);
+                alert('Kopyalama başarısız!');
+            });
+        }
+
+        // MODALI KAPAT
+        function closeModal() {
+            const modal = document.getElementById('apiModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // KATEGORİYE SCROLL ET
+        function scrollToCategory(category) {
+            const element = document.getElementById(`${category}-category`);
+            if (element) {
+                // Menüyü kapat (mobilde)
+                if (window.innerWidth <= 768) {
+                    toggleSidebar();
+                }
+                
+                // Elemente scroll et
+                element.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                // Vurgu efekti ekle
+                element.style.borderColor = 'var(--accent)';
+                element.style.boxShadow = '0 0 30px rgba(255, 45, 85, 0.3)';
+                
+                setTimeout(() => {
+                    element.style.borderColor = '#1a1a20';
+                    element.style.boxShadow = 'none';
+                }, 2000);
+            }
+        }
+
+        // MENÜ AÇMA/KAPAMA FONKSİYONU
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            if (sidebar.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // KATEGORİ AÇMA/KAPAMA FONKSİYONU
+        function toggleCat(catId) {
+            const category = document.getElementById(catId);
+            category.classList.toggle('open');
+        }
+
+        // OVERLAY TIKLAMA
+        document.getElementById('overlay').addEventListener('click', toggleSidebar);
+
+        // ESC TUŞU İLE MENÜYÜ KAPAT
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar.classList.contains('active')) {
+                    toggleSidebar();
+                }
+                
+                const modal = document.getElementById('apiModal');
+                if (modal.classList.contains('active')) {
+                    closeModal();
+                }
+            }
+        });
+
+        // Mobil dokunma optimizasyonu
+        document.addEventListener('touchstart', function() {}, {passive: true});
+    </script>
+</body>
+</html>
