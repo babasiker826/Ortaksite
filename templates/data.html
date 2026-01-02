@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Özsoy / ATAY CHECKER - Data İndirme</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #050507;
+            --panel-bg: #0c0c10;
+            --accent: #ff2d55;
+            --accent-glow: rgba(255, 45, 85, 0.6);
+            --neon-green: #00ffa3;
+            --neon-blue: #00a8ff;
+            --neon-purple: #9c27b0;
+            --sidebar-w: 280px;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Rajdhani', sans-serif; 
+        }
+        
+        body { 
+            background: var(--bg-dark); 
+            color: #e0e0e0; 
+            overflow-x: hidden; 
+            min-height: 100vh;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--panel-bg);
+            position: fixed;
+            left: -280px; /* Kapalı başlar */
+            top: 0;
+            border-right: 1px solid #1a1a20;
+            z-index: 1000;
+            transition: 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar.active { 
+            left: 0; 
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* PROFIL KISMI */
+        .profile-card {
+            padding: 20px 15px;
+            border-bottom: 1px solid #1a1a20;
+            background: linear-gradient(180deg, #111116 0%, transparent 100%);
+        }
+
+        .profile-flex { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 15px;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--accent);
+        }
+
+        .avatar-wrapper img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .profile-details h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* MENÜ KATEGORİ SİSTEMİ */
+        .menu-label { 
+            padding: 18px 15px 6px; 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            color: var(--accent); 
+            letter-spacing: 1.5px; 
+            font-weight: bold; 
+        }
+
+        .nav-category { 
+            cursor: pointer; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-link {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #8d8d99;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 45, 85, 0.05);
+            border-left-color: var(--accent);
+            color: #fff;
+        }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+            transition: max-height 0.4s ease-out;
+        }
+
+        .nav-category.open .submenu { 
+            max-height: 2000px; 
+        }
+        
+        .nav-category.open .chevron { 
+            transform: rotate(180deg); 
+        }
+
+        .sub-link {
+            padding: 10px 15px 10px 40px;
+            font-size: 13px;
+            color: #aaa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.3s;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .sub-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+            border-left-color: var(--neon-green);
+            padding-left: 43px;
+        }
+
+        /* Badge Stilleri */
+        .badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .free-badge {
+            background: rgba(0, 255, 163, 0.15);
+            color: var(--neon-green);
+            border: 1px solid rgba(0, 255, 163, 0.3);
+        }
+
+        .vip-badge {
+            background: rgba(255, 45, 85, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(255, 45, 85, 0.3);
+        }
+
+        /* Çıkış Butonu */
+        .logout-btn {
+            margin-top: auto;
+            padding: 15px;
+            border-top: 1px solid #1a1a20;
+        }
+
+        .logout-btn .nav-link {
+            color: #ff4d4d;
+        }
+
+        .logout-btn .nav-link:hover {
+            background: rgba(255, 77, 77, 0.1);
+            border-left-color: #ff4d4d;
+        }
+
+        /* SAĞ ÜST BUTONLAR - ALT ALTA SIRA */
+        .right-controls {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1001;
+            align-items: flex-end;
+        }
+
+        .btn-top {
+            background: var(--panel-bg);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100px;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-top:hover { 
+            background: #1a1a20; 
+            border-color: var(--accent); 
+            color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* MENÜ AÇMA BUTONU - SAĞ TARAFTA */
+        .menu-open-btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--accent);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100px;
+            justify-content: center;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .sidebar.active ~ .right-controls .menu-open-btn {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .menu-open-btn:hover {
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        /* ANA İÇERİK */
+        .main-wrapper { 
+            min-height: 100vh;
+            padding: 100px 20px 40px 20px;
+            transition: 0.3s;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* NEON BAŞLIK */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #aaa;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* DATA DETAY SAYFASI */
+        .data-detail {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--panel-bg);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid #1a1a20;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1a1a20;
+        }
+
+        .detail-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: rgba(255, 45, 85, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 24px;
+        }
+
+        .detail-info h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .download-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 45, 85, 0.3);
+        }
+
+        .download-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .password-info {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 3px solid var(--neon-green);
+        }
+
+        .password-label {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 5px;
+        }
+
+        .password-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            color: var(--neon-green);
+            letter-spacing: 1px;
+        }
+
+        .warning-box {
+            background: rgba(255, 45, 85, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            border: 1px solid rgba(255, 45, 85, 0.3);
+        }
+
+        .warning-title {
+            color: var(--accent);
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .warning-text {
+            color: #aaa;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .download-button {
+            background: linear-gradient(135deg, var(--accent), #ff6b6b);
+            border: none;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .download-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 45, 85, 0.4);
+        }
+
+        /* OVERLAY */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 999;
+        }
+
+        .overlay.active { 
+            display: block; 
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .menu-open-btn {
+                display: flex;
+                left: 10px;
+                top: 10px;
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            
+            .right-controls { 
+                right: 10px; 
+                top: 10px; 
+                gap: 6px;
+            }
+            
+            .btn-top, .menu-open-btn { 
+                padding: 6px 10px; 
+                font-size: 11px;
+                width: 90px;
+            }
+            
+            .main-wrapper { 
+                padding: 120px 10px 20px 10px; 
+            }
+            
+            .page-title {
+                font-size: 24px;
+            }
+            
+            .page-subtitle {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .right-controls {
+                flex-direction: column;
+            }
+            
+            .btn-top, .menu-open-btn { 
+                width: 80px;
+                font-size: 10px;
+            }
+            
+            .main-wrapper {
+                padding: 140px 10px 20px 10px;
+            }
+            
+            .data-detail {
+                padding: 20px;
+            }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--panel-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-glow);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÜ AÇMA BUTONU - SOL ÜST -->
+    <button class="menu-open-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i> MENÜ
+    </button>
+
+    <!-- SAĞ ÜST BUTONLAR - ALT ALTA -->
+    <div class="right-controls">
+        <button class="menu-open-btn" onclick="goToDashboard()">
+            <i class="fas fa-home"></i> ANA SAYFA
+        </button>
+        <a href="abonelik.html" class="btn-top">
+            <i class="fas fa-shopping-cart"></i> MARKET
+        </a>
+        <a href="profile.html" class="btn-top">
+            <i class="fas fa-user"></i> PROFİL
+        </a>
+    </div>
+
+    <!-- OVERLAY -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <div class="profile-card">
+            <div class="profile-flex">
+                <div class="avatar-wrapper">
+                    <img src="https://i.ibb.co/Xx6gGtrM/file-000000001b9c71fd9807f2279567f8cd.png" alt="Profile">
+                </div>
+                <div class="profile-details">
+                    <h4>Admin <i class="fas fa-check-circle" style="color: #3498db;"></i></h4>
+                    <p style="color: var(--neon-green);">● Çevrimiçi - VIP Üye</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA MENÜSÜ -->
+        <div class="menu-label">DATA İNDİRME</div>
+        <div class="nav-category" id="dataCat">
+            <div class="nav-link" onclick="toggleCat('dataCat')">
+                <span><i class="fas fa-database" style="color:var(--neon-blue)"></i> Data İndirme</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="goToData('101m')">
+                    101m <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('400k-vesika')">
+                    400k Vesika <span class="badge free-badge">FREE</span>
+                </div>
+                <div class="sub-link" onclick="goToData('54m-secmen-2015')">
+                    54m Seçmen 2015 <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('3m-craftrise')">
+                    3m Craftrise <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('9m-ak-parti')">
+                    9m Ak Parti <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('2m-kocaeli-tapu')">
+                    2m Kocaeli Tapu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('25m-okul-no')">
+                    25m Okul No <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('20m-is-yeri')">
+                    20m İş Yeri <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('3m-yabanci')">
+                    3m Yabancı <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('8m-istanbul-tapu')">
+                    8m İstanbul Tapu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('20m-turkiye-facebook')">
+                    20m Türkiye Facebook <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('97m-33-il-tapu')">
+                    97m 33 İl Tapu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('83m-adres')">
+                    83m Adres <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('109m-tc-pro')">
+                    109m Tc Pro <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('195m-gsm')">
+                    195m Gsm <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('6m-asi')">
+                    6m Aşı <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('1m-meslek')">
+                    1m Meslek <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="goToData('100k-universite')">
+                    100k Üniversite <span class="badge free-badge">FREE</span>
+                </div>
+                <div class="sub-link" onclick="goToData('77k-universite')">
+                    77k Üniversite <span class="badge free-badge">FREE</span>
+                </div>
+                <div class="sub-link" onclick="goToData('81m-adres-2009-2024')">
+                    81m Adres (2009-2024) <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÇIKIŞ BUTONU -->
+        <div class="logout-btn">
+            <a href="#" class="nav-link">
+                <span><i class="fas fa-power-off"></i> Çıkış Yap</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ANA İÇERİK -->
+    <main class="main-wrapper" id="mainWrapper">
+        
+        <!-- DATA DETAY İÇERİĞİ BURAYA YÜKLENECEK -->
+
+    </main>
+
+    <script>
+        // DATA LİSTESİ
+        const dataList = {
+            // 101m
+            '101m': {
+                id: '101m',
+                name: '101m Data Seti',
+                size: '46.2 GB',
+                type: 'vip',
+                desc: '101 milyon veri seti',
+                icon: 'fas fa-database',
+                link: 'https://drive.google.com/file/d/1Ut7EPR7ZzmKf-do2GaHE1YkYitcStFOC/view?usp=sharing'
+            },
+            // 400k Vesika
+            '400k-vesika': {
+                id: '400k-vesika',
+                name: '400k Vesika',
+                size: '850 MB',
+                type: 'free',
+                desc: '400.000 vesika fotoğrafı',
+                icon: 'fas fa-id-card',
+                link: 'https://drive.google.com/file/d/1bmgiE1ZQ4aMQEzDRSSAs9WVfX2Kls4QV/view?usp=sharing'
+            },
+            // Diğer datalar...
+            '54m-secmen-2015': {
+                id: '54m-secmen-2015',
+                name: '54m Seçmen 2015',
+                size: '12.5 GB',
+                type: 'vip',
+                desc: '54 milyon seçmen verisi 2015',
+                icon: 'fas fa-vote-yea',
+                link: 'https://drive.google.com/file/d/167XC60hDxvvX5NgNYyIPXIYhUvwV-sCS/view?usp=sharing'
+            },
+            '3m-craftrise': {
+                id: '3m-craftrise',
+                name: '3m Craftrise',
+                size: '6.2 GB',
+                type: 'vip',
+                desc: '3 milyon Craftrise hesabı',
+                icon: 'fas fa-gamepad',
+                link: 'https://drive.google.com/file/d/1FCFS21r81XVUM15mfRiYG9kC5QdtMwJ7/view?usp=sharing'
+            },
+            '9m-ak-parti': {
+                id: '9m-ak-parti',
+                name: '9m Ak Parti',
+                size: '8.7 GB',
+                type: 'vip',
+                desc: '9 milyon AK Parti üyesi',
+                icon: 'fas fa-landmark',
+                link: 'https://drive.google.com/file/d/1JEv5p_bMUNPGPMKiiAfXM-6iHwGahvUm/view?usp=sharing'
+            },
+            '2m-kocaeli-tapu': {
+                id: '2m-kocaeli-tapu',
+                name: '2m Kocaeli Tapu',
+                size: '4.3 GB',
+                type: 'vip',
+                desc: '2 milyon Kocaeli tapu kaydı',
+                icon: 'fas fa-file-contract',
+                link: 'https://drive.google.com/file/d/1NqCCiXTWN7y0zJs_cjKV4UtMrMOrZ8s_/view?usp=sharing'
+            },
+            '25m-okul-no': {
+                id: '25m-okul-no',
+                name: '25m Okul No',
+                size: '15.2 GB',
+                type: 'vip',
+                desc: '25 milyon okul numarası',
+                icon: 'fas fa-graduation-cap',
+                link: 'https://drive.google.com/file/d/1QK6b2J2mVEYyHCXFNvcyVTHJPviK2DKW/view?usp=sharing'
+            },
+            '20m-is-yeri': {
+                id: '20m-is-yeri',
+                name: '20m İş Yeri',
+                size: '9.8 GB',
+                type: 'vip',
+                desc: '20 milyon iş yeri kaydı',
+                icon: 'fas fa-building',
+                link: 'https://drive.google.com/file/d/1dJ6uMyRqZIxNZ9ozF6dDESuaoxYXgi-U/view?usp=sharing'
+            },
+            '3m-yabanci': {
+                id: '3m-yabanci',
+                name: '3m Yabancı',
+                size: '7.1 GB',
+                type: 'vip',
+                desc: '3 milyon yabancı verisi',
+                icon: 'fas fa-globe',
+                link: 'https://drive.google.com/file/d/1hgmF5s6OO-hW6H0pKFSng3L5DpIVAF-x/view?usp=sharing'
+            },
+            '8m-istanbul-tapu': {
+                id: '8m-istanbul-tapu',
+                name: '8m İstanbul Tapu',
+                size: '18.5 GB',
+                type: 'vip',
+                desc: '8 milyon İstanbul tapu kaydı',
+                icon: 'fas fa-file-contract',
+                link: 'https://drive.google.com/file/d/1juEwo-4jQoGKwbcH8Stc9sqZ5yPlkRpE/view?usp=sharing'
+            },
+            '20m-turkiye-facebook': {
+                id: '20m-turkiye-facebook',
+                name: '20m Türkiye Facebook',
+                size: '22.4 GB',
+                type: 'vip',
+                desc: '20 milyon Türkiye Facebook hesabı',
+                icon: 'fab fa-facebook',
+                link: 'https://drive.google.com/file/d/1x8OlCwowDwrRATJJs8lQii96Zy8xGRac/view?usp=sharing'
+            },
+            '97m-33-il-tapu': {
+                id: '97m-33-il-tapu',
+                name: '97m 33 İl Tapu',
+                size: '45.8 GB',
+                type: 'vip',
+                desc: '97 milyon 33 il tapu kaydı',
+                icon: 'fas fa-file-contract',
+                link: 'https://drive.google.com/file/d/1uBsIGe5mFe_8tiqFewywDextSPF6Rabv/view?usp=sharing'
+            },
+            '83m-adres': {
+                id: '83m-adres',
+                name: '83m Adres',
+                size: '38.7 GB',
+                type: 'vip',
+                desc: '83 milyon adres verisi',
+                icon: 'fas fa-map-marker-alt',
+                link: 'https://drive.google.com/file/d/1w3dxU6Dr9AtCN9LxaGIyTcxyShQcEylQ/view?usp=sharing'
+            },
+            '109m-tc-pro': {
+                id: '109m-tc-pro',
+                name: '109m Tc Pro',
+                size: '52.3 GB',
+                type: 'vip',
+                desc: '109 milyon TC profesyonel veri',
+                icon: 'fas fa-id-card',
+                link: 'https://drive.google.com/file/d/15QnumnhgZsiAy9vaILMFpxMpGymWvk57/view?usp=sharing'
+            },
+            '195m-gsm': {
+                id: '195m-gsm',
+                name: '195m Gsm',
+                size: '67.9 GB',
+                type: 'vip',
+                desc: '195 milyon GSM numarası',
+                icon: 'fas fa-phone',
+                link: 'https://drive.google.com/file/d/16UUUBaqFqRD1guzNEk8hjvKZ3cHfZNUX/view?usp=sharing'
+            },
+            '6m-asi': {
+                id: '6m-asi',
+                name: '6m Aşı',
+                size: '13.8 GB',
+                type: 'vip',
+                desc: '6 milyon aşı kaydı',
+                icon: 'fas fa-syringe',
+                link: 'https://drive.google.com/file/d/13WB2iD0_-2wTXKQzuH5VfJBNTtkOeK-0/view?usp=sharing'
+            },
+            '1m-meslek': {
+                id: '1m-meslek',
+                name: '1m Meslek',
+                size: '2.3 GB',
+                type: 'vip',
+                desc: '1 milyon meslek verisi',
+                icon: 'fas fa-briefcase',
+                link: 'https://drive.google.com/file/d/13ZPHEyz_kqL2QAEQFbBX19DBVA6CoAjE/view?usp=sharing'
+            },
+            '100k-universite': {
+                id: '100k-universite',
+                name: '100k Üniversite',
+                size: '230 MB',
+                type: 'free',
+                desc: '100.000 üniversite öğrencisi',
+                icon: 'fas fa-university',
+                link: 'https://drive.google.com/file/d/15BYhR0xU9neTFGCPI_-y0HEttdc5wHvm/view?usp=sharing'
+            },
+            '77k-universite': {
+                id: '77k-universite',
+                name: '77k Üniversite',
+                size: '180 MB',
+                type: 'free',
+                desc: '77.000 üniversite öğrencisi',
+                icon: 'fas fa-university',
+                link: 'https://drive.google.com/file/d/1617DX8JBgpk80_6wSOwP7D79fPnuN75a/view?usp=sharing'
+            },
+            '81m-adres-2009-2024': {
+                id: '81m-adres-2009-2024',
+                name: '81m Adres (2009-2024)',
+                size: '37.6 GB',
+                type: 'vip',
+                desc: '81 milyon adres 2009-2024',
+                icon: 'fas fa-map-marker-alt',
+                link: 'https://drive.google.com/file/d/1BRTriBMqp4ZSvlNMsUGfnW_L2v-fEiGV/view?usp=sharing'
+            }
+        };
+
+        // SAYFA YÜKLENDİĞİNDE
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Data sayfası yüklendi!');
+            
+            // URL'den data ID'sini al
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataId = urlParams.get('data');
+            
+            if (dataId && dataList[dataId]) {
+                showDataDetail(dataId);
+            } else {
+                // URL'de data yoksa varsayılan olarak 101m göster
+                showDataDetail('101m');
+            }
+        });
+
+        // DATA DETAYINI GÖSTER
+        function showDataDetail(dataId) {
+            const data = dataList[dataId];
+            
+            if (!data) {
+                alert('Data bulunamadı!');
+                return;
+            }
+            
+            const mainWrapper = document.getElementById('mainWrapper');
+            mainWrapper.innerHTML = `
+                <!-- SAYFA BAŞLIĞI -->
+                <div class="page-header">
+                    <h1 class="page-title">DATA İNDİRME PANELİ</h1>
+                    <p class="page-subtitle">${data.name} - ${data.desc}</p>
+                </div>
+
+                <div class="data-detail">
+                    <button class="back-button" onclick="goToDashboard()">
+                        <i class="fas fa-arrow-left"></i> Ana Sayfaya Dön
+                    </button>
+                    
+                    <div class="detail-header">
+                        <div class="detail-icon">
+                            <i class="${data.icon}"></i>
+                        </div>
+                        <div class="detail-info">
+                            <h2>${data.name}</h2>
+                            <div class="detail-meta">
+                                <span><i class="fas fa-hdd"></i> ${data.size}</span>
+                                <span><i class="fas fa-tag"></i> ${data.type.toUpperCase()}</span>
+                                <span><i class="fas fa-database"></i> ${data.desc}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="warning-box">
+                        <div class="warning-title">
+                            <i class="fas fa-exclamation-triangle"></i> ÖNEMLİ UYARI!
+                        </div>
+                        <div class="warning-text">
+                            ⛔ Maalesef şu anda bu dosyayı görüntüleyemez ve indiremezsiniz.
+                            Bu dosya yakın zamanda çok fazla kullanıcı tarafından görüntülendi veya indirildi. Lütfen dosyaya erişmeyi daha sonra yeniden deneyin. Erişmek istediğiniz dosya özellikle büyükse veya çok sayıda kişiyle paylaşılıyorsa dosyayı görüntülemek veya indirmek için 24 saate kadar beklemeniz gerekebilir. Bir dosyaya 24 saat sonra hala erişemiyorsanız alan yöneticinizle irtibat kurun.
+                            
+                            <br><br>
+                            ✅ Bu Tür Bir Hata Alırsanız Mevcut Tarayıcı'da Oturum Açınız. Sonra Linke Gidiniz Düzelecektir!
+                        </div>
+                    </div>
+                    
+                    <div class="download-section">
+                        <h3 class="download-title">DATA İNDİRME</h3>
+                        
+                        <div class="password-info">
+                            <div class="password-label">DATA ŞİFRESİ:</div>
+                            <div class="password-value">@devrelax</div>
+                        </div>
+                        
+                        <div class="warning-box" style="margin: 20px 0; background: rgba(0, 255, 163, 0.1); border-color: rgba(0, 255, 163, 0.3);">
+                            <div class="warning-title" style="color: var(--neon-green);">
+                                <i class="fas fa-info-circle"></i> NOT:
+                            </div>
+                            <div class="warning-text">
+                                -🔺- Dikkat -🔺-<br>
+                                -🔻- RelaX Services Discord & Telegram Bot Alt Yapıları -🔻-<br><br>
+                                
+                                📌 RelaX Services Bot Altyapıları İçinde'ki RS Sorgu Bot 15 Data Desteklemekte Olup, 50 Adet Aktif Hizmet Sunmaktadır.<br><br>
+                                
+                                🔻 RelaX Services Bot Altyapıları İçinde'ki RS Sorgu Botu'nun Bütün Hizmetleri'ni Kullanabilmek İçin, Bu Datalar'ı İndirmeniz Gerekmektedir! 🔻
+                            </div>
+                        </div>
+                        
+                        <button class="download-button" onclick="downloadData('${data.link}', '${data.name}')">
+                            <i class="fas fa-download"></i> İNDİRMEYE BAŞLA
+                        </button>
+                        
+                        <p style="text-align: center; color: #777; font-size: 12px; margin-top: 15px;">
+                            İndirme başladığında dosya otomatik olarak bilgisayarınıza inecektir.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // DATA İNDİRME
+        function downloadData(link, dataName) {
+            window.open(link, '_blank');
+            
+            // İndirme başladı uyarısı
+            alert('İndirme başlatıldı! Dosya tarayıcınızda açılacak.\n\nData şifresi: @devrelax\n\nData: ' + dataName);
+        }
+
+        // MENÜ AÇMA/KAPAMA FONKSİYONU
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            if (sidebar.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // KATEGORİ AÇMA/KAPAMA FONKSİYONU
+        function toggleCat(catId) {
+            const category = document.getElementById(catId);
+            category.classList.toggle('open');
+        }
+
+        // DATA'YA GİT
+        function goToData(dataId) {
+            // Menüyü kapat (mobilde)
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+            
+            // Data sayfasına yönlendir
+            window.location.href = `data.html?data=${dataId}`;
+        }
+
+        // ANA SAYFAYA DÖN
+        function goToDashboard() {
+            window.location.href = 'index.html';
+        }
+
+        // OVERLAY TIKLAMA
+        document.getElementById('overlay').addEventListener('click', toggleSidebar);
+
+        // ESC TUŞU İLE MENÜYÜ KAPAT
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar.classList.contains('active')) {
+                    toggleSidebar();
+                }
+            }
+        });
+
+        // Mobil dokunma optimizasyonu
+        document.addEventListener('touchstart', function() {}, {passive: true});
+    </script>
+</body>
+</html>
