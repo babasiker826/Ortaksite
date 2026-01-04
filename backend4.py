@@ -447,60 +447,62 @@ def keneviz_verify():
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("10 per minute", methods=['POST'])
 def login():
-    # GET isteği için her zaman robot doğrulamasına gönder
-    if request.method == 'GET':
+    # Sadece POST isteklerinde doğrulama kontrolü yap
+    if request.method == 'POST':
+        # CSRF token kontrolü
+        csrf_token = request.form.get('csrf_token')
+        if not csrf_token or not hmac.compare_digest(csrf_token, session.get('csrf_token', '')):
+            flash('Güvenlik hatası!')
+            return redirect(url_for('login'))
+        
+        # Robot doğrulama kontrolü
         if not session.get('keneviz_verified'):
+            flash('Lütfen önce robot doğrulamasını tamamlayın!')
             return redirect(url_for('robot_dogrulama') + '?next=/login')
         
-        session['csrf_token'] = secrets.token_urlsafe(32)
-        return render_template('login.html', csrf_token=session['csrf_token'])
-    
-    # POST isteği (form gönderimi)
-    if not session.get('keneviz_verified'):
-        flash('Lütfen önce robot doğrulamasını tamamlayın!')
-        return redirect(url_for('robot_dogrulama') + '?next=/login')
-    
-    # CSRF kontrolü
-    csrf_token = request.form.get('csrf_token')
-    session_token = session.get('csrf_token')
-    if not csrf_token or not session_token or csrf_token != session_token:
-        flash('Güvenlik hatası! Lütfen tekrar deneyin.')
-        return redirect(url_for('login'))
-    
-    # Kalan kod aynı kalabilir...
-    key_str = request.form.get('key', '').strip()
-    if not key_str:
-        flash('Key giriniz!')
-        return redirect(url_for('login'))
-    if key_str == SABIT_FREE_KEY:
-        key = verify_key_string(key_str)
-        if not key:
-            flash('Free key geçersiz!')
+        key_str = request.form.get('key', '').strip()
+        if not key_str:
+            flash('Key giriniz!')
             return redirect(url_for('login'))
-        session['key'] = key.key
-        session['plan'] = key.plan
-        session['key_id'] = key.id
-        session['logged_in'] = True
-        session['username'] = f"user{key.id}"
-        session['is_vip'] = False
-        session['login_ip'] = g.client_ip
-        session.pop('keneviz_verified', None)
-        return redirect(url_for('panel'))
-    if len(key_str) != 20:
-        flash('Geçersiz key formatı! 20 haneli VIP key veya FREE key girin.')
-        return redirect(url_for('login'))
-    key = verify_key_string(key_str)
-    if key and key.active and not key.is_expired():
-        session['key'] = key.key
-        session['plan'] = key.plan
-        session['key_id'] = key.id
-        session['logged_in'] = True
-        session['username'] = f"user{key.id}"
-        session['is_vip'] = key.plan != 'free'
-        session['login_ip'] = g.client_ip
-        session.pop('keneviz_verified', None)
-        return redirect(url_for('panel'))
-    return render_template('key_checking.html', key=key_str)
+        
+        if key_str == SABIT_FREE_KEY:
+            key = verify_key_string(key_str)
+            if not key:
+                flash('Free key geçersiz!')
+                return redirect(url_for('login'))
+            
+            # Session'ı ayarla ve doğrulama flag'ini temizle
+            session['key'] = key.key
+            session['plan'] = key.plan
+            session['key_id'] = key.id
+            session['logged_in'] = True
+            session['username'] = f"user{key.id}"
+            session['is_vip'] = False
+            session['login_ip'] = g.client_ip
+            session.pop('keneviz_verified', None)
+            return redirect(url_for('panel'))
+        
+        if len(key_str) != 20:
+            flash('Geçersiz key formatı! 20 haneli VIP key veya FREE key girin.')
+            return redirect(url_for('login'))
+        
+        key = verify_key_string(key_str)
+        if key and key.active and not key.is_expired():
+            session['key'] = key.key
+            session['plan'] = key.plan
+            session['key_id'] = key.id
+            session['logged_in'] = True
+            session['username'] = f"user{key.id}"
+            session['is_vip'] = key.plan != 'free'
+            session['login_ip'] = g.client_ip
+            session.pop('keneviz_verified', None)
+            return redirect(url_for('panel'))
+        
+        return render_template('key_checking.html', key=key_str)
+    
+    # GET isteği için sadece template döndür
+    session['csrf_token'] = secrets.token_urlsafe(32)
+    return render_template('login.html', csrf_token=session['csrf_token'])
 
 @app.route('/key_check_status')
 @limiter.limit("5 per minute")
