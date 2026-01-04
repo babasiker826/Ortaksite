@@ -377,7 +377,7 @@ def robot_dogrulama():
     next_page = request.args.get('next', '/login')
     session['csrf_token'] = secrets.token_urlsafe(32)
     return render_template('robot_dogrulama.html', next_page=next_page, csrf_token=session['csrf_token'])
-
+    
 @app.route('/keneviz_challenge', methods=['POST'])
 @limiter.limit("5 per minute")
 def keneviz_challenge():
