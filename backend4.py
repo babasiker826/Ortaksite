@@ -381,34 +381,61 @@ def robot_dogrulama():
 @app.route('/keneviz_challenge', methods=['POST'])
 @limiter.limit("5 per minute")
 def keneviz_challenge():
-    csrf_token = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token')
-    if not csrf_token or not hmac.compare_digest(csrf_token, session.get('csrf_token', '')):
-        return jsonify({'success': False, 'error': 'CSRF token gerekli'}), 403
+    # CSRF token kontrolünü basitleştir
+    csrf_token = request.headers.get('X-CSRF-Token')
+    if not csrf_token:
+        return jsonify({'success': False, 'error': 'CSRF token required'}), 400
+    
+    # Session'dan token'ı al ve karşılaştır
+    session_token = session.get('csrf_token')
+    if not session_token or csrf_token != session_token:
+        return jsonify({'success': False, 'error': 'Invalid CSRF token'}), 403
+    
     nonce = secrets.token_urlsafe(16)
     session['keneviz_challenge'] = {
         'nonce': nonce,
         'ts': int(time.time()),
-        'ip': g.client_ip
+        'ip': get_client_ip()
     }
+    # Session'ı kaydet
+    session.modified = True
     return jsonify({'challenge_id': nonce, 'ts': session['keneviz_challenge']['ts']})
-
+    
 @app.route('/keneviz_verify', methods=['POST'])
 @limiter.limit("5 per minute")
 def keneviz_verify():
     try:
         data = request.get_json() or {}
+        
+        # CSRF token kontrolü
+        csrf_token = request.headers.get('X-CSRF-Token')
+        if not csrf_token:
+            return jsonify({'success': False, 'error': 'CSRF token required'}), 400
+        
+        session_token = session.get('csrf_token')
+        if not session_token or csrf_token != session_token:
+            return jsonify({'success': False, 'error': 'Invalid CSRF token'}), 403
+        
         saved = session.get('keneviz_challenge')
         if not saved:
             return jsonify({'success': False, 'error': 'no_challenge'}), 400
-        if saved.get('ip') != g.client_ip:
+        
+        client_ip = get_client_ip()
+        if saved.get('ip') != client_ip:
             return jsonify({'success': False, 'error': 'ip_mismatch'}), 400
+        
         incoming_nonce = data.get('challenge_id')
         if not incoming_nonce or incoming_nonce != saved.get('nonce'):
             return jsonify({'success': False, 'error': 'challenge_mismatch'}), 400
+        
         if time.time() - saved.get('ts', 0) > 300:
             return jsonify({'success': False, 'error': 'timeout'}), 400
+        
+        # Doğrulama başarılı
         session['keneviz_verified'] = True
         session.pop('keneviz_challenge', None)
+        session.modified = True
+        
         return jsonify({
             'success': True,
             'verification_token': 'verified',
@@ -420,15 +447,27 @@ def keneviz_verify():
 @app.route('/login', methods=['GET', 'POST'])
 @limiter.limit("10 per minute", methods=['POST'])
 def login():
-    if not session.get('keneviz_verified'):
-        return redirect(url_for('robot_dogrulama') + '?next=/login')
+    # GET isteği için her zaman robot doğrulamasına gönder
     if request.method == 'GET':
+        if not session.get('keneviz_verified'):
+            return redirect(url_for('robot_dogrulama') + '?next=/login')
+        
         session['csrf_token'] = secrets.token_urlsafe(32)
         return render_template('login.html', csrf_token=session['csrf_token'])
+    
+    # POST isteği (form gönderimi)
+    if not session.get('keneviz_verified'):
+        flash('Lütfen önce robot doğrulamasını tamamlayın!')
+        return redirect(url_for('robot_dogrulama') + '?next=/login')
+    
+    # CSRF kontrolü
     csrf_token = request.form.get('csrf_token')
-    if not csrf_token or not hmac.compare_digest(csrf_token, session.get('csrf_token', '')):
-        flash('Güvenlik hatası!')
+    session_token = session.get('csrf_token')
+    if not csrf_token or not session_token or csrf_token != session_token:
+        flash('Güvenlik hatası! Lütfen tekrar deneyin.')
         return redirect(url_for('login'))
+    
+    # Kalan kod aynı kalabilir...
     key_str = request.form.get('key', '').strip()
     if not key_str:
         flash('Key giriniz!')
