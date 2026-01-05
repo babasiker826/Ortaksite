@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ÖZSOY PANEL - Sorgu</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#070708; --panel:#0f1112; --muted:#9aa3ad; --accent:#ffb86b; --text:#e6eef6;
+      --border: rgba(255,255,255,0.04);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter, 'Segoe UI', Tahoma, sans-serif;background:linear-gradient(180deg,#050505,#0b0b0b);color:var(--text);padding:20px}
+    .wrap{max-width:1200px;margin:0 auto}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    h1{font-size:18px}
+    .controls{display:flex;gap:8px;align-items:center}
+    .search{background:var(--panel);border:1px solid var(--border);padding:10px 12px;border-radius:10px;color:var(--text);min-width:260px}
+    .btn{background:transparent;border:1px solid var(--border);padding:9px 12px;border-radius:8px;color:var(--muted);cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,#2f6bff,#4a90e2);border:none;color:white}
+    .card{background:transparent;padding:12px;border-radius:12px}
+    .info{color:var(--muted);font-size:13px;margin-top:6px}
+
+    /* table */
+    .table-wrap{margin-top:10px;border-radius:10px;overflow:auto;border:1px solid var(--border);background:linear-gradient(180deg,#0b0b0d,#0e0e10)}
+    table{width:100%;border-collapse:collapse;min-width:900px}
+    thead th{position:sticky;top:0;background:linear-gradient(180deg,#0c0c0d,#121213);padding:12px 10px;text-align:left;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;border-bottom:1px solid rgba(255,255,255,0.03)}
+    tbody tr{transition:background .12s, transform .12s}
+    tbody tr:hover{background:rgba(255,255,255,0.01);transform:translateY(-1px)}
+    td{padding:14px 10px;font-size:14px;color:var(--text);vertical-align:middle;border-bottom:1px solid rgba(255,255,255,0.02)}
+
+    /* sticky first column (TC) */
+    thead th:first-child, tbody td:first-child{
+      position: sticky; left: 0; z-index:3; background: linear-gradient(90deg,#0b0b0d,#0f1011);
+      box-shadow: 4px 0 8px rgba(0,0,0,0.4);
+    }
+    td.tc{font-family:monospace;font-weight:700;color:var(--accent);min-width:160px}
+
+    .col-name{font-weight:800;letter-spacing:0.4px}
+    .col-muted{color:var(--muted);font-weight:600;width:140px}
+    .col-mother{width:160px;color:var(--muted)}
+
+    /* API özel durumu için stil */
+    .api-note {
+      background: rgba(255, 184, 107, 0.1);
+      border-left: 3px solid var(--accent);
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    /* pagination & meta */
+    .meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;color:var(--muted);gap:12px}
+    .pager{display:flex;gap:8px;align-items:center}
+    .page-btn{background:transparent;border:1px solid var(--border);padding:6px 10px;border-radius:6px;color:var(--muted);cursor:pointer}
+
+    /* raw box */
+    .raw{background:#0b0b0b;border:1px solid var(--border);padding:10px;border-radius:8px;margin-top:12px;font-family:monospace;font-size:12px;color:var(--muted);max-height:320px;overflow:auto}
+
+    @media (max-width:900px){
+      .search{min-width:140px}
+      table{min-width:700px}
+      td.col-muted{display:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>ÖZSOY PANEL — Sorgu</h1>
+        <div class="info">API: <strong style="color:var(--accent)">{{ api_info.name if api_info else api_id }}</strong></div>
+      </div>
+
+      <div class="controls">
+        <input id="global-search" class="search" placeholder="Ara: ad / soyad / tc / il ..." oninput="filterTable(this.value)">
+        <button class="btn" onclick="toggleRaw()"><i class="fas fa-code"></i>&nbsp;JSON</button>
+        <button class="btn" onclick="exportCSV()"><i class="fas fa-file-csv"></i>&nbsp;CSV</button>
+        <button class="btn primary" onclick="document.getElementById('sorgu-form').dispatchEvent(new Event('submit'))"><i class="fas fa-search"></i>&nbsp;Sorgula</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <form id="sorgu-form" onsubmit="event.preventDefault(); runQuery();">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          {% if api_info and api_info.params %}
+            <!-- Özel durum: TC ile çalışan MERNİS API'leri -->
+            {% if api_id in ['tc_sorgu', 'aile_sorgu', 'baba_sorgu', 'anne_sorgu', 'adres_sorgu', 'tcpro_sorgu', 'hane_sorgu', 'sulale_sorgu'] %}
+              <div style="min-width:160px">
+                <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">TC KİMLİK NO</label>
+                <input id="tc" name="tc" placeholder="TC giriniz (11 haneli)" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:#0a0a0a;color:var(--text);min-width:160px" />
+              </div>
+              <div style="width:100%; margin-top:10px;">
+                <div class="api-note">
+                  <i class="fas fa-info-circle"></i> {{ api_info.name }} için TC kimlik numarası gereklidir. Örnek: 11111111110
+                </div>
+              </div>
+            
+            <!-- Özel durum: Güncel GSM sorgusu -->
+            {% elif api_id == 'guncelgsm_sorgu' %}
+              <div style="min-width:160px">
+                <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">GSM NUMARASI</label>
+                <input id="gsm" name="gsm" placeholder="GSM giriniz (10 haneli)" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:#0a0a0a;color:var(--text);min-width:160px" />
+              </div>
+              <div style="width:100%; margin-top:10px;">
+                <div class="api-note">
+                  <i class="fas fa-info-circle"></i> GSM numarasını 10 haneli giriniz. Örnek: 5458607551
+                </div>
+              </div>
+            
+            <!-- Standart API'ler (parametrelerini kullan) -->
+            {% else %}
+              {% for p in api_info.params %}
+                <div style="min-width:160px">
+                  <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">{{ p|upper() }}</label>
+                  <input id="{{p}}" name="{{p}}" placeholder="{{ p|upper() }} giriniz" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:#0a0a0a;color:var(--text);min-width:160px" />
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% else %}
+            <div style="padding:10px;color:var(--muted)">Bu API için parametre gerekmiyor.</div>
+          {% endif %}
+        </div>
+      </form>
+
+      <div class="table-wrap" id="table-wrap" style="display:block">
+        <table id="results-table" role="table" aria-label="Sorgu sonuçları">
+          <thead id="table-head">
+            <tr>
+              <th>TC</th><th>Ad</th><th>Soyad</th><th class="col-muted">Baba Adı</th><th class="col-muted">Baba TC</th><th class="col-mother">Anne Adı</th><th class="col-muted">Doğum</th><th class="col-muted">İl</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- JS ile dolacak -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="meta">
+        <div id="result-meta">0 kayıt bulundu</div>
+        <div class="pager">
+          <button class="page-btn" onclick="changePage('prev')">&laquo; Önceki</button>
+          <span style="margin:0 8px">Sayfa <span id="current-page">1</span> / <span id="total-pages">1</span></span>
+          <button class="page-btn" onclick="changePage('next')">Sonraki &raquo;</button>
+          <select id="page-size" onchange="changePageSize(this.value)" style="margin-left:12px;padding:6px;border-radius:6px;background:#0b0b0b;color:var(--muted);border:1px solid var(--border)">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="0">Tüm</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="raw-box" class="raw" style="display:none"></div>
+      <div id="mini-raw" class="raw" style="margin-top:10px;max-height:140px"></div>
+    </div>
+  </div>
+
+<script>
+  // Global state
+  let lastRaw = null;
+  let lastItems = [];       // normalleştirilmiş array of objects
+  let filteredItems = [];   // filtre uygulandıktan sonraki array
+  let pageSize = 50;
+  let currentPage = 1;
+
+  // Utility: format value
+  function fmt(v){
+    if(v === null || v === undefined || v === '' || v === 'mevcutDegil' || v === 'null' || v === 'undefined') return '-';
+    return String(v);
+  }
+
+  // Map backend keys to readable Turkish keys
+  function normalizeItem(item){
+    if(!item || typeof item !== 'object') return {'Sonuc': fmt(item)};
+
+    const map = {
+      // Ana alanlar
+      'tc': 'TC', 'adi': 'Ad', 'ad': 'Ad', 'soyadi': 'Soyad', 'soyad': 'Soyad',
+      'isim': 'Ad', 'name': 'Ad', 'surname': 'Soyad', 'lastname': 'Soyad',
+
+      // Aile bilgileri
+      'babaAdi': 'Baba Adı', 'babaadi': 'Baba Adı', 'babad': 'Baba Adı', 'fathername': 'Baba Adı',
+      'babaTc': 'Baba TC', 'babatc': 'Baba TC', 'father_tc': 'Baba TC',
+      'anneAdi': 'Anne Adı', 'anneadi': 'Anne Adı', 'annead': 'Anne Adı', 'mothername': 'Anne Adı',
+      'anneTc': 'Anne TC', 'annetc': 'Anne TC', 'mother_tc': 'Anne TC',
+
+      // MERNİS özel alanları
+      'aile': 'Aile Bilgileri',
+      'adres': 'Adres', 'address': 'Adres', 'adresBilgisi': 'Adres',
+      'hane': 'Hane Bilgisi',
+      'sulale': 'Sülale Bilgisi',
+      'guncelGsm': 'Güncel GSM', 'guncelTelefon': 'Güncel Telefon',
+
+      // Diğer bilgiler
+      'dogumTarihi': 'Doğum Tarihi', 'dogum': 'Doğum Tarihi', 'birthdate': 'Doğum Tarihi', 'birth': 'Doğum Tarihi',
+      'nufusIl': 'İl', 'il': 'İl', 'city': 'İl', 'sehir': 'İl',
+      'nufusIlce': 'İlçe', 'ilce': 'İlçe', 'district': 'İlçe', 'county': 'İlçe',
+      'mahalle': 'Mahalle', 'mah': 'Mahalle', 'neighborhood': 'Mahalle',
+      'gsm': 'Telefon', 'telefon': 'Telefon', 'phone': 'Telefon', 'numara': 'Telefon',
+      'iban': 'IBAN', 'hesapNo': 'Hesap No',
+      'plaka': 'Plaka', 'plate': 'Plaka',
+      'email': 'E-posta', 'eposta': 'E-posta',
+      'meslek': 'Meslek', 'job': 'Meslek',
+      'medeniHal': 'Medeni Hal', 'marital': 'Medeni Hal',
+      'cinsiyet': 'Cinsiyet', 'gender': 'Cinsiyet'
+    };
+
+    const out = {};
+    for(const k in item){
+      const nk = map[k] || k;
+      let value = item[k];
+
+      // Eğer değer obje ise JSON string yap
+      if(typeof value === 'object' && value !== null) {
+        value = JSON.stringify(value);
+      }
+
+      out[nk] = value;
+    }
+    return out;
+  }
+
+  // Tüm olası API yanıt şekillerini normalize et
+  function normalizeResponsePayload(payload){
+    if(!payload) return [];
+
+    // String ise
+    if(typeof payload === 'string') return [{ 'Metin': payload }];
+
+    // Array ise direkt normalize et
+    if(Array.isArray(payload)) return payload.map(normalizeItem);
+
+    // Object ise
+    if(typeof payload === 'object' && payload !== null){
+      // API yanıtlarında verinin bulunabileceği tüm olası key'ler
+      const possibleDataKeys = [
+        'veri', 'data', 'rows', 'items', 'results', 'sonuc', 'result',
+        'liste', 'list', 'kayitlar', 'records', 'bilgiler', 'info'
+      ];
+
+      // Önce data key'lerini kontrol et
+      for(const key of possibleDataKeys){
+        if(payload[key] && Array.isArray(payload[key])){
+          return payload[key].map(normalizeItem);
+        }
+      }
+
+      // Direkt data içinde array olabilir (örnek: payload = [{...}, {...}])
+      // Yukarıda Array.isArray kontrolü zaten yapıldı
+
+      // Eğer object içinde tek kayıt varsa (single result)
+      const isSingleRecord = Object.keys(payload).some(key =>
+        ['tc', 'adi', 'ad', 'name', 'soyadi', 'soyad', 'babaAdi', 'anneAdi'].includes(key)
+      );
+
+      if(isSingleRecord){
+        return [normalizeItem(payload)];
+      }
+
+      // Diğer durumlarda object'in kendisini göster
+      return [normalizeItem(payload)];
+    }
+
+    // Diğer tipler
+    return [{ 'Sonuc': String(payload) }];
+  }
+
+  // Render helpers
+  function buildHeaders(items){
+    const headerSet = new Set();
+    items.forEach(it => {
+      if(it && typeof it === 'object'){
+        Object.keys(it).forEach(k => headerSet.add(k));
+      }
+    });
+
+    // Öncelikli sütunlar
+    const priority = [
+      'TC', 'Ad', 'Soyad', 'Doğum Tarihi', 'İl', 'İlçe',
+      'Anne Adı', 'Baba Adı', 'Telefon', 'IBAN', 'E-posta',
+      'Baba TC', 'Anne TC', 'Mahalle', 'Adres',
+      'Aile Bilgileri', 'Adres Bilgisi', 'Hane Bilgisi', 'Sülale Bilgisi',
+      'Güncel GSM'
+    ];
+
+    const headers = Array.from(headerSet);
+    headers.sort((a,b)=>{
+      const ia = priority.indexOf(a), ib = priority.indexOf(b);
+      if(ia === -1 && ib === -1) return a.localeCompare(b);
+      if(ia === -1) return 1;
+      if(ib === -1) return -1;
+      return ia - ib;
+    });
+    return headers;
+  }
+
+  function renderPage(){
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '';
+
+    if(!filteredItems || filteredItems.length === 0){
+      document.getElementById('result-meta').textContent = '0 kayıt bulundu';
+      document.getElementById('table-head').innerHTML = '<tr><th>TC</th><th>Ad</th><th>Soyad</th><th class="col-muted">Baba Adı</th><th class="col-muted">Baba TC</th><th class="col-mother">Anne Adı</th><th class="col-muted">Doğum</th><th class="col-muted">İl</th></tr>';
+      return;
+    }
+
+    // pagination
+    const total = filteredItems.length;
+    const totalPages = (pageSize === 0) ? 1 : Math.max(1, Math.ceil(total / pageSize));
+    if(currentPage > totalPages) currentPage = totalPages;
+    const start = (pageSize === 0) ? 0 : (currentPage - 1) * pageSize;
+    const end = (pageSize === 0) ? total : start + pageSize;
+    const pageItems = filteredItems.slice(start, end);
+
+    // headers
+    const headers = buildHeaders(filteredItems);
+    const thead = document.getElementById('table-head');
+    thead.innerHTML = '<tr>' + headers.map((h, idx) =>
+      `<th${idx===0? ' style="min-width:160px"':''}>${h}</th>`
+    ).join('') + '</tr>';
+
+    // body rows
+    const rows = pageItems.map(it => {
+      // Arama için tüm değerleri birleştir
+      const searchText = Object.values(it).map(v => fmt(v).toLowerCase()).join(' ');
+
+      return '<tr data-search="' + searchText + '">' +
+        headers.map((h, idx) => {
+          const v = it[h];
+          const value = fmt(v);
+
+          // Özel formatlama
+          if(h === 'TC' && /^\d{11}$/.test(value)) {
+            return `<td class="tc">${value}</td>`;
+          }
+
+          if((h === 'Telefon' || h === 'GSM' || h === 'phone' || h === 'Güncel GSM') && /^\d{10}$/.test(value)) {
+            return `<td>${value.replace(/(\d{3})(\d{3})(\d{4})/,'($1) $2 $3')}</td>`;
+          }
+
+          if((h === 'Ad' || h === 'Soyad') && value && value !== '-') {
+            return `<td class="col-name">${value}</td>`;
+          }
+
+          // MERNİS özel alanları için geniş görünüm
+          if(['Aile Bilgileri', 'Adres Bilgisi', 'Hane Bilgisi', 'Sülale Bilgisi'].includes(h)) {
+            return `<td style="min-width:200px">${value}</td>`;
+          }
+
+          // Uzun metinleri kısalt
+          if(value.length > 50) {
+            return `<td title="${value.replace(/"/g, '&quot;')}">${value.substring(0, 50)}...</td>`;
+          }
+
+          return `<td>${value}</td>`;
+        }).join('') + '</tr>';
+    }).join('');
+
+    tbody.innerHTML = rows;
+
+    document.getElementById('result-meta').textContent = total + ' kayıt bulundu';
+    document.getElementById('current-page').textContent = currentPage;
+    document.getElementById('total-pages').textContent = totalPages;
+  }
+
+  function applyFilter(q){
+    if(!q || q.trim() === '') {
+      filteredItems = lastItems.slice();
+    } else {
+      q = q.toLowerCase().trim();
+      filteredItems = lastItems.filter(it => {
+        // Tüm değerlerde ara
+        return Object.values(it).some(v =>
+          String(v).toLowerCase().includes(q)
+        );
+      });
+    }
+    // reset to first page
+    currentPage = 1;
+    renderPage();
+  }
+
+  // Public called by search input
+  function filterTable(q){ applyFilter(q); }
+
+  // Pagination controls
+  function changePage(dir){
+    const total = filteredItems.length;
+    const totalPages = (pageSize === 0) ? 1 : Math.max(1, Math.ceil(total / pageSize));
+    if(dir === 'next'){ if(currentPage < totalPages) currentPage++; }
+    else if(dir === 'prev'){ if(currentPage > 1) currentPage--; }
+    renderPage();
+  }
+
+  function changePageSize(val){
+    pageSize = parseInt(val, 10);
+    if(isNaN(pageSize)) pageSize = 50;
+    currentPage = 1;
+    renderPage();
+  }
+
+  // Toggle raw JSON
+  function toggleRaw(){
+    const el = document.getElementById('raw-box');
+    if(el.style.display === 'block'){
+      el.style.display = 'none';
+    } else {
+      el.style.display = 'block';
+      el.textContent = JSON.stringify(lastRaw || lastItems, null, 2);
+    }
+  }
+
+  // CSV export (all filtered items)
+  function exportCSV(){
+    const items = filteredItems || [];
+    if(items.length === 0){ alert('İndirilecek veri yok'); return; }
+    const headers = buildHeaders(items);
+    const rows = items.map(it => headers.map(h => {
+      const v = it[h];
+      if(v === null || v === undefined) return '';
+      return String(v).replace(/"/g, '""');
+    }));
+    let csv = headers.map(h => `"${h.replace(/"/g,'""')}"`).join(',') + '\n';
+    csv += rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sorgu_${new Date().toISOString().slice(0,10)}_${items.length}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // MAIN: runQuery -> calls backend and render
+  async function runQuery(){
+    // hide raw
+    document.getElementById('raw-box').style.display = 'none';
+
+    // collect payload from form fields
+    const form = document.getElementById('sorgu-form');
+    const fd = new FormData(form);
+    const payload = { api: '{{ api_id }}' };
+
+    for(const [k, v] of fd.entries()){
+      if(v && v.toString().trim().length > 0) payload[k] = v.toString().trim();
+    }
+
+    // API'ye özel ön işlemeler
+    const apiId = '{{ api_id }}';
+    
+    // TC ile çalışan API'ler için kontrol
+    if(['tc_sorgu', 'aile_sorgu', 'baba_sorgu', 'anne_sorgu', 'adres_sorgu', 'tcpro_sorgu', 'hane_sorgu', 'sulale_sorgu'].includes(apiId)) {
+      const tc = payload.tc;
+      if(!tc) {
+        alert('TC kimlik numarası gerekli!');
+        return;
+      }
+      if(!/^\d{11}$/.test(tc)) {
+        alert('TC kimlik numarası 11 haneli olmalıdır!');
+        return;
+      }
+    }
+    
+    // GSM sorgusu için format kontrolü
+    if(apiId === 'guncelgsm_sorgu') {
+      const gsm = payload.gsm;
+      if(!gsm) {
+        alert('GSM numarası gerekli!');
+        return;
+      }
+      if(!/^\d{10}$/.test(gsm)) {
+        alert('GSM numarası 10 haneli olmalıdır! (Örnek: 5458607551)');
+        return;
+      }
+    }
+
+    // UI feedback
+    const searchBtn = document.querySelector('.btn.primary');
+    const orig = searchBtn.innerHTML;
+    searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sorgulanıyor...';
+    searchBtn.disabled = true;
+
+    try{
+      const res = await fetch('/api/sorgu', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+      });
+
+      const j = await res.json();
+      lastRaw = j;
+
+      if(!j.success){
+        alert('API Hatası: ' + (j.error || 'Bilinmeyen'));
+        searchBtn.innerHTML = orig;
+        searchBtn.disabled = false;
+        return;
+      }
+
+      // normalize payload - GÜNCELLENDİ
+      const items = normalizeResponsePayload(j.data || j);
+
+      // Eğer hiç item yoksa
+      if(items.length === 0) {
+        // Meta bilgileri göster
+        const metaInfo = {};
+        for(const key in j) {
+          if(!['data', 'veri', 'rows', 'items'].includes(key) && !Array.isArray(j[key])) {
+            metaInfo[key] = j[key];
+          }
+        }
+
+        if(Object.keys(metaInfo).length > 0) {
+          items.push(normalizeItem(metaInfo));
+        } else {
+          items.push({'Mesaj': 'Sonuç bulunamadı'});
+        }
+      }
+
+      lastItems = items;
+      filteredItems = lastItems.slice();
+
+      // reset paging & render
+      currentPage = 1;
+      document.getElementById('mini-raw').textContent = JSON.stringify(lastItems.slice(0,50), null, 2);
+      renderPage();
+
+      // show raw minimized
+      document.getElementById('raw-box').textContent = JSON.stringify(j, null, 2);
+
+    } catch(err){
+      console.error('Sorgu hata:', err);
+      alert('Sorgu hatası: ' + (err.message || err));
+    } finally {
+      searchBtn.innerHTML = orig;
+      searchBtn.disabled = false;
+    }
+  }
+
+  // expose for console testing
+  window.renderResults = function(dataArray){
+    lastItems = normalizeResponsePayload(dataArray);
+    filteredItems = lastItems.slice();
+    currentPage = 1;
+    renderPage();
+  };
+  window.filterTable = filterTable;
+  window.exportCSV = exportCSV;
+  window.toggleRaw = toggleRaw;
+  window.changePage = changePage;
+  window.changePageSize = changePageSize;
+  window.normalizeResponsePayload = normalizeResponsePayload; // Debug için
+
+  // Test için örnek veri
+  window.testData = function(){
+    const sample = {
+      "apiSahibi": "ZyrDa",
+      "apiDiscordSunucusu": "discord.gg\/denksiz",
+      "apiTelegramGrubu": "t.me\/zyrdaware",
+      "kayitSayisi": 190,
+      "sure": "1.17 sn",
+      "veri": [
+        {
+          "tc": "17788177084",
+          "adi": "EYMEN",
+          "soyadi": "YAVUZ",
+          "dogumTarihi": "9.12.2020",
+          "babaAdi": "SABRİ",
+          "babaTc": "mevcutDegil",
+          "anneAdi": "SULTAN",
+          "anneTc": "mevcutDegil",
+          "nufusIl": "ADANA",
+          "nufusIlce": "SEYHAN"
+        },
+        {
+          "tc": "12345678901",
+          "adi": "AHMET",
+          "soyadi": "DEMİR",
+          "dogumTarihi": "15.5.1995",
+          "babaAdi": "MEHMET",
+          "babaTc": "98765432109",
+          "anneAdi": "FATMA",
+          "anneTc": "87654321098",
+          "nufusIl": "İSTANBUL",
+          "nufusIlce": "KADIKÖY"
+        }
+      ]
+    };
+
+    lastRaw = sample;
+    lastItems = normalizeResponsePayload(sample);
+    filteredItems = lastItems.slice();
+    currentPage = 1;
+    renderPage();
+    document.getElementById('mini-raw').textContent = JSON.stringify(lastItems.slice(0,50), null, 2);
+  };
+
+  // Sayfa yüklendiğinde test verisini göster (opsiyonel)
+  // document.addEventListener('DOMContentLoaded', () => window.testData());
+</script>
+</body>
+</html>
