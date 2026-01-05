@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Key Kontrol Ediliyor</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui;}
+        body{background:#0a0a1a;color:white;height:100vh;display:flex;align-items:center;justify-content:center;}
+        .card{background:rgba(15,15,37,0.9);padding:40px;border-radius:20px;border:1px solid rgba(255,45,85,0.3);text-align:center;max-width:500px;width:90%;}
+        .loader{width:80px;height:80px;border:8px solid rgba(255,45,85,0.2);border-top-color:#ff2d55;border-radius:50%;margin:20px auto;animation:spin 1s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        h1{color:#ff2d55;margin-bottom:20px;}
+        .key-display{background:rgba(0,0,0,0.5);padding:15px;border-radius:10px;margin:20px 0;font-family:monospace;color:#00a8ff;}
+        .status{color:#00ffa3;margin:15px 0;}
+        .error{color:#ff2d55;}
+        .success{color:#2ecc71;}
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded',function(){
+            const key="{{ key }}";
+            const status=document.getElementById('status');
+            const loader=document.querySelector('.loader');
+            status.textContent='Key kontrol ediliyor...';
+            
+            // API'den kontrol et
+            fetch('/key_check_status?key='+encodeURIComponent(key))
+                .then(r=>{
+                    if(!r.ok) throw new Error('Sunucu hatası: '+r.status);
+                    return r.json();
+                })
+                .then(data=>{
+                    console.log('API Yanıtı:', data);
+                    
+                    if(data.success){
+                        status.textContent='✅ Key doğrulandı! Panele yönlendiriliyorsunuz...';
+                        status.className='status success';
+                        
+                        // 2 saniye sonra panele yönlendir
+                        setTimeout(()=>{
+                            window.location.href = '/panel';
+                        },2000);
+                    }else{
+                        status.textContent='❌ ' + (data.error || 'Key doğrulanamadı');
+                        status.className='status error';
+                        loader.style.display='none';
+                        
+                        // 5 saniye sonra login sayfasına dön
+                        setTimeout(()=>{
+                            window.location.href='/login';
+                        },5000);
+                    }
+                })
+                .catch(e=>{
+                    console.error('Hata:', e);
+                    status.textContent='❌ Bağlantı hatası: ' + e.message;
+                    status.className='status error';
+                    loader.style.display='none';
+                    
+                    // 5 saniye sonra login sayfasına dön
+                    setTimeout(()=>{
+                        window.location.href='/login';
+                    },5000);
+                });
+        });
+    </script>
+</head>
+<body>
+    <div class="card">
+        <h1>🔐 KEY KONTROL</h1>
+        <div class="key-display">{{ key }}</div>
+        <div class="loader"></div>
+        <div class="status" id="status"></div>
+    </div>
+</body>
+</html>
