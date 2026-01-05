@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Özsoy / ATAY CHECKER Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #050507;
+            --panel-bg: #0c0c10;
+            --accent: #ff2d55;
+            --accent-glow: rgba(255, 45, 85, 0.6);
+            --moonlight: rgba(255, 255, 255, 0.4);
+            --neon-green: #00ffa3;
+            --neon-blue: #00a8ff;
+            --neon-purple: #9c27b0;
+            --sidebar-w: 280px;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Rajdhani', sans-serif; 
+        }
+        
+        body { 
+            background: var(--bg-dark); 
+            color: #e0e0e0; 
+            overflow-x: hidden; 
+            height: 100vh;
+        }
+
+        /* KAR TOPU ANİMASYONU */
+        .snowflakes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            opacity: 0.8;
+            animation: fall linear infinite;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* VIP MODAL STYLES */
+        .vip-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .vip-modal.active {
+            display: flex;
+        }
+
+        .vip-content {
+            background: var(--panel-bg);
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 40px rgba(255, 45, 85, 0.5);
+            animation: vipPulse 2s infinite;
+        }
+
+        @keyframes vipPulse {
+            0%, 100% { box-shadow: 0 0 40px rgba(255, 45, 85, 0.5); }
+            50% { box-shadow: 0 0 60px rgba(255, 45, 85, 0.8); }
+        }
+
+        .vip-header {
+            padding: 25px;
+            background: linear-gradient(90deg, rgba(255, 45, 85, 0.2), rgba(255, 45, 85, 0.1));
+            border-bottom: 1px solid rgba(255, 45, 85, 0.3);
+            text-align: center;
+        }
+
+        .vip-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        .vip-subtitle {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .vip-body {
+            padding: 25px;
+        }
+
+        .vip-features {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 45, 85, 0.2);
+        }
+
+        .vip-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+
+        .vip-feature i {
+            color: var(--accent);
+            font-size: 16px;
+        }
+
+        .vip-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .vip-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .vip-buy {
+            background: linear-gradient(135deg, var(--accent), #ff6b6b);
+            color: white;
+        }
+
+        .vip-buy:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 45, 85, 0.4);
+        }
+
+        .vip-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            border: 1px solid #333;
+        }
+
+        .vip-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--panel-bg);
+            position: fixed;
+            left: -280px; /* Kapalı başlar */
+            top: 0;
+            border-right: 1px solid #1a1a20;
+            z-index: 1000;
+            transition: 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar.active { 
+            left: 0; 
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* PROFİL KISMI */
+        .profile-card {
+            padding: 20px 15px;
+            border-bottom: 1px solid #1a1a20;
+            background: linear-gradient(180deg, #111116 0%, transparent 100%);
+        }
+
+        .profile-flex { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 15px;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--accent);
+        }
+
+        .avatar-wrapper img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .profile-details h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 6px 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 9px;
+            color: #777;
+            margin-top: 2px;
+        }
+
+        /* MENÜ KATEGORİ SİSTEMİ */
+        .menu-label { 
+            padding: 18px 15px 6px; 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            color: var(--accent); 
+            letter-spacing: 1.5px; 
+            font-weight: bold; 
+        }
+
+        .nav-category { 
+            cursor: pointer; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-link {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #8d8d99;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 45, 85, 0.05);
+            border-left-color: var(--accent);
+            color: #fff;
+        }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+            transition: max-height 0.4s ease-out;
+        }
+
+        .nav-category.open .submenu { 
+            max-height: 2000px; 
+        }
+        
+        .nav-category.open .chevron { 
+            transform: rotate(180deg); 
+        }
+
+        .sub-link {
+            padding: 10px 15px 10px 40px;
+            font-size: 13px;
+            color: #aaa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.3s;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .sub-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+            border-left-color: var(--neon-green);
+            padding-left: 43px;
+        }
+
+        /* Badge Stilleri */
+        .badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .free-badge {
+            background: rgba(0, 255, 163, 0.15);
+            color: var(--neon-green);
+            border: 1px solid rgba(0, 255, 163, 0.3);
+        }
+
+        .vip-badge {
+            background: rgba(255, 45, 85, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(255, 45, 85, 0.3);
+        }
+
+        /* ÇIKIŞ BUTONU */
+        .logout-btn {
+            margin-top: auto;
+            padding: 15px;
+            border-top: 1px solid #1a1a20;
+        }
+
+        .logout-btn .nav-link {
+            color: #ff4d4d;
+        }
+
+        .logout-btn .nav-link:hover {
+            background: rgba(255, 77, 77, 0.1);
+            border-left-color: #ff4d4d;
+        }
+
+        /* --- MAIN CONTENT --- */
+        .main-wrapper { 
+            min-height: 100vh;
+            padding: 20px;
+            transition: 0.3s;
+            width: 100%;
+        }
+
+        /* SAĞ ÜST BUTONLAR - ALT ALTA SIRA */
+        .right-controls {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1001;
+            align-items: flex-end;
+        }
+
+        .btn-top {
+            background: var(--panel-bg);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100px;
+            justify-content: center;
+        }
+
+        .btn-top:hover { 
+            background: #1a1a20; 
+            border-color: var(--accent); 
+            color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* MENÜ AÇMA BUTONU - SAĞ TARAFTA */
+        .menu-open-btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--accent);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 100px;
+            justify-content: center;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .sidebar.active ~ .right-controls .menu-open-btn {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .menu-open-btn:hover {
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        /* NEON DUYURU MESAJI */
+        .neon-alert {
+            background: #000;
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 0 10px var(--accent-glow);
+            overflow: hidden;
+        }
+
+        .neon-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            text-transform: uppercase;
+            animation: flicker 2s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% {
+                text-shadow: 0 0 4px #fff, 0 0 11px #fff, 0 0 19px var(--accent), 0 0 40px var(--accent);
+            }
+            20%, 24%, 55% { 
+                text-shadow: none; 
+            }
+        }
+
+        /* ANA GÖRSEL */
+        .main-image {
+            max-width: 800px;
+            margin: 20px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+
+        .main-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* STATS CARDS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent);
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 45, 85, 0.1);
+        }
+
+        .stat-card:nth-child(2) { border-left-color: var(--neon-green); }
+        .stat-card:nth-child(3) { border-left-color: var(--neon-blue); }
+        .stat-card:nth-child(4) { border-left-color: var(--neon-purple); }
+
+        .stat-title {
+            color: #777;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-trend {
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trend-up { color: var(--neon-green); }
+        .trend-down { color: var(--accent); }
+
+        /* ANA SAYFA TABLOSU */
+        .cyber-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            background: var(--panel-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #1a1a20;
+        }
+
+        .cyber-table th { 
+            background: #111; 
+            padding: 15px; 
+            color: var(--accent); 
+            text-align: left; 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .cyber-table td { 
+            padding: 15px; 
+            border-bottom: 1px solid #1a1a20; 
+            font-size: 13px;
+        }
+
+        .cyber-table tr:last-child td { border-bottom: none; }
+
+        .marquee-row {
+            background: rgba(255, 45, 85, 0.05);
+            font-weight: bold;
+            color: var(--neon-green);
+        }
+
+        /* QUICK ACTIONS */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .action-card {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid #1a1a20;
+        }
+
+        .action-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 45, 85, 0.1);
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            color: var(--accent);
+        }
+
+        .action-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .action-desc {
+            color: #aaa;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        /* API STATUS */
+        .api-status {
+            margin: 20px 0;
+            background: var(--panel-bg);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #1a1a20;
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .status-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--neon-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #08080a;
+            border-radius: 8px;
+            border-left: 3px solid var(--neon-green);
+        }
+
+        .status-item.offline {
+            border-left-color: #ff4d4d;
+        }
+
+        .status-name {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .status-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #fff;
+        }
+
+        /* USER INFO */
+        .user-info {
+            margin-top: 20px;
+            background: var(--panel-bg);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #1a1a20;
+        }
+
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            padding: 12px;
+            background: #08080a;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #777;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #fff;
+            word-break: break-all;
+        }
+
+        /* OVERLAY */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 999;
+        }
+
+        .overlay.active { 
+            display: block; 
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .right-controls {
+                top: 10px;
+                right: 10px;
+                gap: 6px;
+            }
+            
+            .btn-top, .menu-open-btn { 
+                padding: 6px 10px; 
+                font-size: 11px;
+                width: 90px;
+            }
+            
+            .main-wrapper { 
+                padding: 100px 10px 20px 10px; 
+            }
+            
+            .stats-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .quick-actions { 
+                grid-template-columns: repeat(2, 1fr); 
+                gap: 10px;
+            }
+            
+            .cyber-table { 
+                display: block; 
+                overflow-x: auto; 
+                font-size: 12px;
+            }
+            
+            .cyber-table th,
+            .cyber-table td {
+                padding: 10px;
+            }
+            
+            .neon-text { 
+                font-size: 14px; 
+            }
+            
+            .main-image {
+                margin: 15px auto;
+            }
+            
+            .vip-content {
+                width: 95%;
+            }
+            
+            .vip-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .vip-btn {
+                min-width: 250px;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .quick-actions { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .right-controls {
+                flex-direction: column;
+            }
+            
+            .btn-top, .menu-open-btn { 
+                width: 80px;
+                font-size: 10px;
+            }
+            
+            .sidebar {
+                width: 260px;
+                left: -260px;
+            }
+            
+            .main-wrapper {
+                padding: 120px 10px 20px 10px;
+            }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--panel-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-glow);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- KAR TOPU ANİMASYONU -->
+    <div class="snowflakes" id="snowflakes"></div>
+
+    <!-- SAĞ ÜST BUTONLAR - ALT ALTA -->
+    <div class="right-controls">
+        <button class="menu-open-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i> MENÜ
+        </button>
+        <button class="btn-top" onclick="location.href='abonelik.html'">
+            <i class="fas fa-shopping-cart"></i> MARKET
+        </button>
+        <button class="btn-top" onclick="location.href='profile.html'">
+            <i class="fas fa-user"></i> PROFİL
+        </button>
+    </div>
+
+    <!-- VIP MODAL -->
+    <div class="vip-modal" id="vipModal">
+        <div class="vip-content">
+            <div class="vip-header">
+                <div class="vip-title">🚫 VIP ÜYE DEĞİLSİNİZ</div>
+                <div class="vip-subtitle">Bu özellik sadece VIP üyeler için!</div>
+            </div>
+            <div class="vip-body">
+                <div class="vip-features">
+                    <div class="vip-feature">
+                        <i class="fas fa-crown"></i>
+                        <span>60+ VIP API'ye erişim</span>
+                    </div>
+                    <div class="vip-feature">
+                        <i class="fas fa-bolt"></i>
+                        <span>Tüm Sorgu Araçları</span>
+                    </div>
+                    <div class="vip-feature">
+                        <i class="fas fa-code"></i>
+                        <span>40+ VIP Kategori</span>
+                    </div>
+                    <div class="vip-feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Gelişmiş güvenlik özellikleri</span>
+                    </div>
+                    <div class="vip-feature">
+                        <i class="fas fa-headset"></i>
+                        <span>7/24 öncelikli destek</span>
+                    </div>
+                </div>
+                
+                <div class="vip-buttons">
+                    <button class="vip-btn vip-buy" onclick="goToMarket()">
+                        <i class="fas fa-shopping-cart"></i> VIP PAKET SATIN AL
+                    </button>
+                    <button class="vip-btn vip-cancel" onclick="closeVipModal()">
+                        <i class="fas fa-times"></i> VAZGEÇ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- OVERLAY -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+        <div class="profile-card">
+            <div class="profile-flex">
+                <div class="avatar-wrapper">
+                    <img src="https://i.ibb.co/Xx6gGtrM/file-000000001b9c71fd9807f2279567f8cd.png" alt="Profile">
+                </div>
+                <div class="profile-details">
+                    <h4>Admin <i class="fas fa-check-circle" style="color: #3498db;"></i></h4>
+                    <p style="color: var(--neon-green);">● Çevrimiçi - VIP Üye</p>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" style="color: var(--accent);">150</div>
+                    <div class="stat-label">Toplam Sorgu</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" style="color: var(--neon-green);">12</div>
+                    <div class="stat-label">Bugün</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" style="color: var(--neon-blue);">30gün</div>
+                    <div class="stat-label">Kalan Süre</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TC VE GSM SORGULARI -->
+        <div class="menu-label">TC VE GSM SORGULARI</div>
+        <div class="nav-category" id="tcGsmCat">
+            <div class="nav-link" onclick="toggleCat('tcGsmCat')">
+                <span><i class="fas fa-id-card" style="color:var(--accent)"></i> TC & GSM</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="goToApi('adsoyad')">
+                    Ad Soyad TC Sorgu <span class="badge free-badge">FREE</span>
+                </div>
+                <div class="sub-link" onclick="goToApi('gsmtc')">
+                    GSM → TC Sorgu <span class="badge free-badge">FREE</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('tcgsm')">
+                    TC → GSM Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PLAKA SORGULARI -->
+        <div class="menu-label">PLAKA SORGULARI</div>
+        <div class="nav-category" id="plakaCat">
+            <div class="nav-link" onclick="toggleCat('plakaCat')">
+                <span><i class="fas fa-car" style="color:var(--neon-green)"></i> Plaka</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="checkVipAndApi('plaka')">
+                    TC → Plaka Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('adsoyadplaka')">
+                    Ad Soyad Plaka <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('adplaka')">
+                    Sadece Ad Plaka <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('soyadplaka')">
+                    Sadece Soyad Plaka <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAPARA SORGULARI -->
+        <div class="menu-label">PAPARA SORGULARI</div>
+        <div class="nav-category" id="paparaCat">
+            <div class="nav-link" onclick="toggleCat('paparaCat')">
+                <span><i class="fas fa-money-bill-wave" style="color:var(--neon-blue)"></i> Papara</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="checkVipAndApi('papara')">
+                    Papara Numarası Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('adsoyadpapara')">
+                    Ad Soyad Papara Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('adpapara')">
+                    Sadece Ad Papara <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('papara_alternatif')">
+                    Papara Alternatif <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ECZANE SORGULARI -->
+        <div class="menu-label">ECZANE SORGULARI</div>
+        <div class="nav-category" id="eczaneCat">
+            <div class="nav-link" onclick="toggleCat('eczaneCat')">
+                <span><i class="fas fa-pills" style="color:var(--neon-purple)"></i> Eczane</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="checkVipAndApi('adeczane')">
+                    Ad Eczane Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('ileczane')">
+                    İl Eczane Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SERİ NO SORGULARI -->
+        <div class="menu-label">SERİ NO SORGULARI</div>
+        <div class="nav-category" id="seriNoCat">
+            <div class="nav-link" onclick="toggleCat('seriNoCat')">
+                <span><i class="fas fa-hashtag" style="color:var(--accent)"></i> Seri No</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="checkVipAndApi('tcserino')">
+                    TC Seri No Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('adsoyadserino')">
+                    Ad Soyad Seri No <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('adserino')">
+                    Sadece Ad Seri No <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('soyadserino')">
+                    Sadece Soyad Seri No <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('ililceserino')">
+                    İl İlçe Seri No <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('serino_direct')">
+                    Seri No Doğrudan Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('adilserino')">
+                    Ad İl Seri No <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VERGİ SORGULARI -->
+        <div class="menu-label">VERGİ SORGULARI</div>
+        <div class="nav-category" id="vergiCat">
+            <div class="nav-link" onclick="toggleCat('vergiCat')">
+                <span><i class="fas fa-file-invoice-dollar" style="color:var(--neon-green)"></i> Vergi</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="checkVipAndApi('advergi')">
+                    Ad Vergi Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('ilcevergidairesi')">
+                    İlçe Vergi Dairesi <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('vergino')">
+                    Vergi No Sorgulama <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('vergilimit')">
+                    Vergi Limitli Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHISHING / HACK TOOLS -->
+        <div class="menu-label">SIZMA ISLEMLERI</div>
+        <div class="nav-category" id="phishingCat">
+            <div class="nav-link" onclick="toggleCat('phishingCat')">
+                <span><i class="fas fa-user-secret" style="color:var(--accent)"></i> Phishing Tools</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="checkVipAndApi('phishing_create')">
+                    Phishing Link Oluşturma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_instagram')">
+                    Instagram Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_facebook')">
+                    Facebook Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_netflix')">
+                    Netflix Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_tiktok')">
+                    TikTok Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_twitter')">
+                    Twitter Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_google')">
+                    Google Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_microsoft')">
+                    Microsoft Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_spotify')">
+                    Spotify Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_steam')">
+                    Steam Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_discord')">
+                    Discord Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_paypal')">
+                    PayPal Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_amazon')">
+                    Amazon Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_apple')">
+                    Apple Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_epicgames')">
+                    Epic Games Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('phishing_whatsapp')">
+                    WhatsApp Çalma <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL API'LERİ -->
+        <div class="menu-label">PANEL API'LERİ</div>
+        <div class="nav-category" id="panelCat">
+            <div class="nav-link" onclick="toggleCat('panelCat')">
+                <span><i class="fas fa-server" style="color:#ff2d55"></i> Panel API'ler</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </div>
+            <div class="submenu">
+                <div class="sub-link" onclick="checkVipAndApi('nufus')">
+                    Nüfus Sorgulama <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('asi_kayitlari')">
+                    Aşı Kayıtları <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('rontgen_listesi')">
+                    Röntgen Listesi <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('recete_gecmisi')">
+                    Reçete Geçmişi <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('adli_sicil')">
+                    Adli Sicil Kaydı <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('pasaport')">
+                    Pasaport Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('ehliyet')">
+                    Ehliyet Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('arac_sahibi')">
+                    Araç Sahibi Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('sgk_ise_giris')">
+                    SGK İşe Giriş <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('ogrenci_durum')">
+                    Öğrenci Durumu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('kronik_hastalik')">
+                    Kronik Hastalık <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('vergi_borc')">
+                    Vergi Borç Sorgu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('tapu_gayrimenkul')">
+                    Tapu Gayrimenkul <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('askerlik_durum')">
+                    Askerlik Durumu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('su_fatura')">
+                    Su Faturası <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('elektrik_fatura')">
+                    Elektrik Faturası <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('otel_rezervasyon')">
+                    Otel Rezervasyon <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('istanbulkart_bakiye')">
+                    İstanbulkart Bakiye <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('spor_federasyon')">
+                    Spor Federasyon Kaydı <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('kutuphane_uye')">
+                    Kütüphane Üye Durumu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('hasta_yatis')">
+                    Hasta Yatış Geçmişi <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('banka_musteri')">
+                    Banka Müşteri Bilgisi <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('kredi_risk')">
+                    Kredi Risk Raporu <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('meb_mezuniyet')">
+                    MEB Mezuniyet <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('ticaret_sikayet')">
+                    Ticaret Şikayet Kaydı <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('cevre_ceza')">
+                    Çevre Ceza <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('noter_islem')">
+                    Noter İşlem <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('avci_lisans')">
+                    Avcı Lisans <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('ucak_bilet')">
+                    Uçak Bileti <span class="badge vip-badge">VIP</span>
+                </div>
+                <div class="sub-link" onclick="checkVipAndApi('seyahat_hareket')">
+                    Seyahat Hareket <span class="badge vip-badge">VIP</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEMEL MENÜ ÖĞELERİ -->
+        <div class="menu-label">DİĞER İŞLEMLER</div>
+        <div class="nav-category" id="homeCat">
+            <a href="index.html" class="nav-link">
+                <span><i class="fas fa-home" style="color:var(--accent)"></i> Ana Sayfa</span>
+            </a>
+        </div>
+
+        <div class="nav-category" id="profileCat">
+            <a href="profile.html" class="nav-link">
+                <span><i class="fas fa-user" style="color:var(--neon-green)"></i> Profilim</span>
+            </a>
+        </div>
+
+        <div class="nav-category" id="marketCat">
+            <a href="abonelik.html" class="nav-link">
+                <span><i class="fas fa-shopping-cart" style="color:var(--neon-blue)"></i> Market</span>
+            </a>
+        </div>
+
+        <div class="nav-category" id="helpCat">
+            <a href="yardim.html" class="nav-link">
+                <span><i class="fas fa-question-circle" style="color:var(--neon-purple)"></i> Yardım</span>
+            </a>
+        </div>
+
+        <!-- ÇIKIŞ BUTONU -->
+        <div class="logout-btn">
+            <a href="#" class="nav-link">
+                <span><i class="fas fa-power-off"></i> Çıkış Yap</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- ANA İÇERİK -->
+    <main class="main-wrapper" id="mainWrapper">
+        
+        <!-- NEON DUYURU -->
+        <div class="neon-alert">
+            <div class="neon-text">ÖZSOY / ATAY CHECKER v4.0 - TÜM ÖZELLİKLER VIP! SADECE 2 SORGÜ FREE</div>
+        </div>
+
+        <!-- ANA GÖRSEL -->
+        <div class="main-image">
+            <img src="https://i.ibb.co/gFzZgz9q/file-00000000333871fd9bd375ca95bb74fb.png" alt="ÖZSOY / ATAY CHECKER ELITE PANEL">
+        </div>
+
+        <!-- İSTATİSTİK KARTLARI -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">Toplam Sorgu</div>
+                <div class="stat-value">150</div>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-arrow-up"></i> Bugün: 12
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Aktif Plan</div>
+                <div class="stat-value">VIP</div>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-crown"></i> VIP
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Kalan Süre</div>
+                <div class="stat-value">30 gün</div>
+                <div class="stat-trend trend-up">
+                    <i class="fas fa-clock"></i> Aktif
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Free Sorgu</div>
+                <div class="stat-value">2</div>
+                <div class="stat-trend trend-down">
+                    <i class="fas fa-info-circle"></i> Ad Soyad & GSM→TC
+                </div>
+            </div>
+        </div>
+
+        <!-- HIZLI İŞLEMLER -->
+        <div class="quick-actions">
+            <div class="action-card" onclick="location.href='abonelik.html'">
+                <div class="action-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="action-title">MARKET</div>
+                <div class="action-desc">VIP paketleri satın alın</div>
+            </div>
+            <div class="action-card" onclick="goToApi('adsoyad')">
+                <div class="action-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="action-title">AD SOYAD TC</div>
+                <div class="action-desc">Ad soyad ile TC sorgula (FREE)</div>
+            </div>
+            <div class="action-card" onclick="goToApi('gsmtc')">
+                <div class="action-icon">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div class="action-title">GSM→TC</div>
+                <div class="action-desc">GSM'den TC sorgula (FREE)</div>
+            </div>
+            <div class="action-card" onclick="showVipModal()">
+                <div class="action-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <div class="action-title">VIP ÖZELLİKLER</div>
+                <div class="action-desc">VIP avantajlarını görüntüle</div>
+            </div>
+        </div>
+
+        <!-- SİSTEM DURUMU -->
+        <div class="api-status">
+            <div class="status-header">
+                <div class="status-title">SİSTEM DURUMU</div>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span style="color: var(--neon-green); font-family: 'Orbitron';">ONLINE</span>
+                </div>
+            </div>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-name">FREE Sorgular</span>
+                    <span class="status-value">2/2</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-name">VIP API'ler</span>
+                    <span class="status-value">60+ VIP</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-name">VIP Kategoriler</span>
+                    <span class="status-value">40+ VIP</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-name">Sunucu</span>
+                    <span class="status-value">24/7</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-name">Sistem Yükü</span>
+                    <span class="status-value">%15</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-name">Yanıt Süresi</span>
+                    <span class="status-value">85ms</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SON AKTİVİTELER TABLOSU -->
+        <table class="cyber-table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-history"></i> SON AKTİVİTELER</th>
+                    <th><i class="fas fa-info-circle"></i> DETAY</th>
+                    <th><i class="fas fa-clock"></i> ZAMAN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="marquee-row">
+                    <td><i class="fas fa-bullhorn"></i> ÖNEMLİ DUYURU</td>
+                    <td><marquee scrollamount="5">TÜM SORGULARI ARAÇLARI VE API'LER AKTİF! SADECE "AD SOYAD TC" VE "GSM→TC" SORGULARI FREE KALDI...</marquee></td>
+                    <td>ŞİMDİ</td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-check-circle"></i> SORGULARI AKTİF</td>
+                    <td>Tüm sorgulama araçları aktif</td>
+                    <td>Şimdi</td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-code"></i> PANEL API AKTİF</td>
+                    <td>Tüm Panel API'leri aktif (60+ API)</td>
+                    <td>Şimdi</td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-user-secret"></i> PHISHING AKTİF</td>
+                    <td>Phishing araçları aktif (16+ araç)</td>
+                    <td>Şimdi</td>
+                </tr>
+                <tr>
+                    <td><i class="fas fa-shield-alt"></i> VIP KORUMA</td>
+                    <td>Tüm sistem VIP koruması altında</td>
+                    <td>Şimdi</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- KULLANICI BİLGİLERİ -->
+        <div class="user-info">
+            <div style="font-family: 'Orbitron'; font-size: 16px; margin-bottom: 15px; color: #fff;">
+                <i class="fas fa-user-circle"></i> KULLANICI BİLGİLERİ
+            </div>
+            <div class="user-grid">
+                <div class="info-item">
+                    <div class="info-label">IP ADRESİNİZ</div>
+                    <div class="info-value">192.168.1.1</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">SON GİRİŞ</div>
+                    <div class="info-value">15/03/2024 14:20</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">FREE SORGULAR</div>
+                    <div class="info-value" style="color: var(--neon-green);">Ad Soyad TC, GSM→TC</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">VIP DURUMU</div>
+                    <div class="info-value" style="color: var(--accent);">AKTİF</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // KAR TOPU ANİMASYONU
+        function createSnowflakes() {
+            const snowflakes = document.getElementById('snowflakes');
+            const flakeCount = 50;
+            
+            for (let i = 0; i < flakeCount; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.classList.add('snowflake');
+                snowflake.innerHTML = '❄';
+                
+                // Random position
+                const startLeft = Math.random() * 100;
+                const startDelay = Math.random() * 5;
+                const duration = 10 + Math.random() * 10;
+                const size = 10 + Math.random() * 10;
+                
+                snowflake.style.left = `${startLeft}%`;
+                snowflake.style.animationDelay = `${startDelay}s`;
+                snowflake.style.animationDuration = `${duration}s`;
+                snowflake.style.fontSize = `${size}px`;
+                
+                snowflakes.appendChild(snowflake);
+            }
+        }
+
+        // KULLANICI BİLGİLERİ
+        let currentUser = {
+            id: 1,
+            username: "Admin",
+            isVip: true,
+            vipExpiry: "2024-04-15",
+            queryCount: 150,
+            dailyLimit: 20
+        };
+
+        // FREE API LİSTESİ (SADECE BU İKİSİ FREE)
+        const freeApis = ['adsoyad', 'gsmtc'];
+
+        // VIP API LİSTESİ (TÜM DİĞER API'LER)
+        const vipApis = [
+            // TC/GSM
+            'tcgsm',
+            
+            // Plaka
+            'plaka', 'adsoyadplaka', 'adplaka', 'soyadplaka',
+            
+            // Papara
+            'papara', 'adsoyadpapara', 'adpapara', 'papara_alternatif',
+            
+            // Eczane
+            'adeczane', 'ileczane',
+            
+            // Seri No
+            'tcserino', 'adsoyadserino', 'adserino', 'soyadserino',
+            'ililceserino', 'serino_direct', 'adilserino',
+            
+            // Vergi
+            'advergi', 'ilcevergidairesi', 'vergino', 'vergilimit',
+            
+            // Phishing
+            'phishing_create', 'phishing_instagram', 'phishing_facebook',
+            'phishing_netflix', 'phishing_tiktok', 'phishing_twitter',
+            'phishing_google', 'phishing_microsoft', 'phishing_spotify',
+            'phishing_steam', 'phishing_discord', 'phishing_paypal',
+            'phishing_amazon', 'phishing_apple', 'phishing_epicgames',
+            'phishing_whatsapp',
+            
+            // Panel
+            'nufus', 'asi_kayitlari', 'rontgen_listesi', 'recete_gecmisi',
+            'adli_sicil', 'pasaport', 'ehliyet', 'arac_sahibi',
+            'sgk_ise_giris', 'ogrenci_durum', 'kronik_hastalik',
+            'vergi_borc', 'tapu_gayrimenkul', 'askerlik_durum',
+            'su_fatura', 'elektrik_fatura', 'otel_rezervasyon',
+            'istanbulkart_bakiye', 'spor_federasyon', 'kutuphane_uye',
+            'hasta_yatis', 'banka_musteri', 'kredi_risk', 'meb_mezuniyet',
+            'ticaret_sikayet', 'cevre_ceza', 'noter_islem', 'avci_lisans',
+            'ucak_bilet', 'seyahat_hareket'
+        ];
+
+        // VIP MODAL İŞLEMLERİ
+        function showVipModal() {
+            const vipModal = document.getElementById('vipModal');
+            vipModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeVipModal() {
+            const vipModal = document.getElementById('vipModal');
+            vipModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function goToMarket() {
+            closeVipModal();
+            setTimeout(() => {
+                window.location.href = 'abonelik.html';
+            }, 300);
+        }
+
+        // GENEL VIP KONTROL FONKSİYONU
+        function checkVipAccess(featureType, featureName = null) {
+            // Eğer kullanıcı VIP ise her şeye erişebilir
+            if (currentUser.isVip) {
+                return true;
+            }
+            
+            // Free API'ler kontrolü
+            if (featureType === 'api' && freeApis.includes(featureName)) {
+                return true;
+            }
+            
+            // VIP API'ler kontrolü
+            if (featureType === 'api' && vipApis.includes(featureName)) {
+                showVipModal();
+                return false;
+            }
+            
+            // Eğer hiçbiri değilse, muhtemelen yönlendirme
+            showVipModal();
+            return false;
+        }
+
+        // API İÇİN YÖNLENDİRME FONKSİYONU
+        function checkVipAndApi(apiName) {
+            // API için VIP kontrolü
+            if (!checkVipAccess('api', apiName)) {
+                return;
+            }
+            
+            // Menüyü kapat (mobilde)
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+            
+            // API sayfasına yönlendir
+            setTimeout(() => {
+                window.location.href = `sorgu.html?api=${apiName}`;
+            }, 300);
+        }
+
+        // MENÜ AÇMA/KAPAMA FONKSİYONU
+        function toggleSidebar() {
+            console.log('Menü butonuna tıklandı!');
+            
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            if (sidebar.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // KATEGORİ AÇMA/KAPAMA FONKSİYONU
+        function toggleCat(catId) {
+            const category = document.getElementById(catId);
+            category.classList.toggle('open');
+        }
+
+        // API'YE YÖNLENDİRME FONKSİYONU (SADECE FREE API'LER İÇİN)
+        function goToApi(apiName) {
+            console.log('API seçildi:', apiName);
+            
+            // Menüyü kapat (mobilde)
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+            
+            // API sayfasına yönlendir
+            setTimeout(() => {
+                window.location.href = `sorgu.html?api=${apiName}`;
+            }, 300);
+        }
+
+        // OVERLAY TIKLAMA
+        document.getElementById('overlay').addEventListener('click', toggleSidebar);
+
+        // ESC TUŞU İLE MENÜYÜ KAPAT
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar.classList.contains('active')) {
+                    toggleSidebar();
+                }
+                
+                const vipModal = document.getElementById('vipModal');
+                if (vipModal.classList.contains('active')) {
+                    closeVipModal();
+                }
+            }
+        });
+
+        // SAYFA YÜKLENDİĞİNDE
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Panel başarıyla yüklendi!');
+            console.log('VIP KORUMA SİSTEMİ AKTİF!');
+            console.log('SADECE 2 FREE API: adsoyad, gsmtc');
+            console.log('TÜM DİĞER SORGULARI VE API\'LER VIP!');
+            console.log('VIP Kullanıcı:', currentUser.isVip ? 'EVET' : 'HAYIR');
+            
+            // Kar topu animasyonunu başlat
+            createSnowflakes();
+            
+            // Kullanıcı VIP değilse profil bilgisini güncelle
+            if (!currentUser.isVip) {
+                const profileDetails = document.querySelector('.profile-details p');
+                if (profileDetails) {
+                    profileDetails.innerHTML = '<p style="color: #ff4d4d;">● Çevrimiçi - FREE Üye</p>';
+                }
+                
+                // Stat kartını güncelle
+                const statCard = document.querySelector('.stat-card:nth-child(2) .stat-value');
+                if (statCard) {
+                    statCard.textContent = 'FREE';
+                }
+                
+                const statTrend = document.querySelector('.stat-card:nth-child(2) .stat-trend');
+                if (statTrend) {
+                    statTrend.innerHTML = '<i class="fas fa-times-circle" style="color:#ff4d4d"></i> FREE';
+                    statTrend.classList.remove('trend-up');
+                    statTrend.classList.add('trend-down');
+                }
+            }
+            
+            // Alt menü bağlantılarını kontrol et
+            const subLinks = document.querySelectorAll('.sub-link');
+            subLinks.forEach(link => {
+                link.style.cursor = 'pointer';
+            });
+        });
+
+        // Mobil dokunma optimizasyonu
+        document.addEventListener('touchstart', function() {}, {passive: true});
+    </script>
+</body>
+</html>
