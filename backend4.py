@@ -114,7 +114,7 @@ APIS = {
     'adsoyad': {
         'name': 'Ad Soyad TC Sorgu',
         'plan': 'free',
-        'endpoint': 'https://zyrdaware.xyz/api/adsoyad?auth=t.me/zyrdaware&ad={ad}&soyad={soyad}',
+        'endpoint': 'http://45.81.113.22:4040/adsoyad?ad={ad}&soyad={soyad}',
         'params': ['ad', 'soyad']
     },
     'gsmtc': {
